@@ -10,6 +10,8 @@ export class AudioManager {
         this.musicVolume = 0.7;
         this.sfxVolume = 0.8;
         this.initialized = false;
+        this.audioContext = null;
+        this.ringPlaying = false;
     }
 
     /**
@@ -18,125 +20,27 @@ export class AudioManager {
     async initialize() {
         console.log('Initializing AudioManager...');
 
-        // Create phone ring sound using Web Audio API
-        // This creates a synthetic phone ring sound since we don't have an audio file yet
-        this.createPhoneRingSound();
-
-        this.initialized = true;
-        console.log('AudioManager initialized successfully');
+        try {
+            // Audio context will be created on first user interaction (browser requirement)
+            this.initialized = true;
+            console.log('AudioManager initialized successfully');
+        } catch (error) {
+            console.warn('Audio initialization warning:', error);
+            this.initialized = true; // Continue anyway
+        }
     }
 
     /**
-     * Creates a synthetic phone ring sound using oscillators
-     * This provides a classic telephone ring sound without needing an audio file
+     * Ensure audio context is available
      */
-    createPhoneRingSound() {
-        // We'll use Babylon.js Sound with a data URL containing synthesized audio
-        // For now, we'll create a placeholder that uses the Web Audio API directly
-
-        const audioContext = BABYLON.Engine.audioEngine.audioContext;
-
-        this.phoneRingPlayer = {
-            isPlaying: false,
-            oscillator: null,
-            gainNode: null,
-
-            play: () => {
-                if (this.phoneRingPlayer.isPlaying) return;
-
-                this.phoneRingPlayer.isPlaying = true;
-                this.playRingTone();
-            },
-
-            stop: () => {
-                this.phoneRingPlayer.isPlaying = false;
-                if (this.phoneRingPlayer.oscillator) {
-                    this.phoneRingPlayer.oscillator.stop();
-                    this.phoneRingPlayer.oscillator = null;
-                }
-            }
-        };
+    ensureAudioContext() {
+        if (!this.audioContext && BABYLON.Engine.audioEngine && BABYLON.Engine.audioEngine.audioContext) {
+            this.audioContext = BABYLON.Engine.audioEngine.audioContext;
+        }
     }
 
     /**
-     * Plays a realistic telephone ring sound
-     * Uses dual-tone multi-frequency (similar to old telephone ringers)
-     */
-    playRingTone() {
-        const audioContext = BABYLON.Engine.audioEngine.audioContext;
-
-        const playBurst = () => {
-            if (!this.phoneRingPlayer.isPlaying) return;
-
-            // Create two oscillators for a more realistic ring
-            const osc1 = audioContext.createOscillator();
-            const osc2 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            // Classic phone ring frequencies (approximately 440Hz and 480Hz)
-            osc1.frequency.value = 440;
-            osc2.frequency.value = 480;
-            osc1.type = 'sine';
-            osc2.type = 'sine';
-
-            // Connect oscillators to gain node
-            osc1.connect(gainNode);
-            osc2.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            // Volume envelope for ring burst
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.3, audioContext.currentTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-
-            // Start oscillators
-            osc1.start(audioContext.currentTime);
-            osc2.start(audioContext.currentTime);
-
-            // Stop after burst duration
-            osc1.stop(audioContext.currentTime + 0.4);
-            osc2.stop(audioContext.currentTime + 0.4);
-
-            // Schedule next burst (2 bursts per ring cycle)
-            setTimeout(() => {
-                if (!this.phoneRingPlayer.isPlaying) return;
-
-                const osc3 = audioContext.createOscillator();
-                const osc4 = audioContext.createOscillator();
-                const gainNode2 = audioContext.createGain();
-
-                osc3.frequency.value = 440;
-                osc4.frequency.value = 480;
-                osc3.type = 'sine';
-                osc4.type = 'sine';
-
-                osc3.connect(gainNode2);
-                osc4.connect(gainNode2);
-                gainNode2.connect(audioContext.destination);
-
-                gainNode2.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode2.gain.linearRampToValueAtTime(this.sfxVolume * 0.3, audioContext.currentTime + 0.05);
-                gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-
-                osc3.start(audioContext.currentTime);
-                osc4.start(audioContext.currentTime);
-                osc3.stop(audioContext.currentTime + 0.4);
-                osc4.stop(audioContext.currentTime + 0.4);
-            }, 500);
-
-            // Schedule next ring cycle
-            setTimeout(() => {
-                if (this.phoneRingPlayer.isPlaying) {
-                    playBurst();
-                }
-            }, 2000); // 2 second intervals between rings
-        };
-
-        playBurst();
-    }
-
-    /**
-     * Play the phone ring sound
+     * Play the smartphone ring sound
      */
     playPhoneRing() {
         if (!this.initialized) {
@@ -144,16 +48,155 @@ export class AudioManager {
             return;
         }
 
-        console.log('Playing phone ring sound...');
-        this.phoneRingPlayer.play();
+        try {
+            this.ensureAudioContext();
+            if (!this.audioContext) {
+                console.warn('Audio context not available');
+                return;
+            }
+
+            console.log('Playing smartphone ringtone...');
+            this.ringPlaying = true;
+            this.playModernRingtone();
+        } catch (error) {
+            console.warn('Could not play audio:', error);
+        }
+    }
+
+    /**
+     * Plays a modern smartphone ringtone with a melodic pattern
+     * Uses a pleasant ascending melody pattern
+     */
+    playModernRingtone() {
+        if (!this.audioContext || !this.ringPlaying) return;
+
+        // Modern ringtone melody (simplified "marimba" style)
+        // Notes: E5, C#5, D5, A4 (880, 554, 587, 440 Hz)
+        const melody = [
+            { freq: 659, duration: 0.15 },  // E5
+            { freq: 523, duration: 0.15 },  // C5
+            { freq: 587, duration: 0.15 },  // D5
+            { freq: 440, duration: 0.2 },   // A4
+            { freq: 494, duration: 0.15 },  // B4
+            { freq: 523, duration: 0.15 },  // C5
+            { freq: 587, duration: 0.15 },  // D5
+            { freq: 659, duration: 0.3 }    // E5 (longer)
+        ];
+
+        const playMelody = () => {
+            if (!this.ringPlaying) return;
+
+            let time = this.audioContext.currentTime;
+
+            // Play each note in the melody
+            melody.forEach((note, index) => {
+                if (!this.ringPlaying) return;
+
+                try {
+                    // Create oscillators for richer sound
+                    const osc1 = this.audioContext.createOscillator();
+                    const osc2 = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    // Main tone
+                    osc1.frequency.value = note.freq;
+                    osc1.type = 'sine';
+
+                    // Harmonic (adds richness)
+                    osc2.frequency.value = note.freq * 2;
+                    osc2.type = 'sine';
+
+                    // Connect oscillators
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    // Volume envelope (fade in/out for smooth sound)
+                    const startTime = time;
+                    const endTime = time + note.duration;
+
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.25, startTime + 0.02);
+                    gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.2, endTime - 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
+
+                    // Set harmonic level lower
+                    const harmonicGain = this.audioContext.createGain();
+                    harmonicGain.gain.value = 0.3;
+                    osc2.disconnect();
+                    osc2.connect(harmonicGain);
+                    harmonicGain.connect(gainNode);
+
+                    // Start and stop oscillators
+                    osc1.start(startTime);
+                    osc2.start(startTime);
+                    osc1.stop(endTime);
+                    osc2.stop(endTime);
+
+                    time += note.duration;
+
+                } catch (error) {
+                    console.warn('Error playing note:', error);
+                }
+            });
+
+            // Add vibration buzz sound between melodies
+            setTimeout(() => {
+                if (!this.ringPlaying) return;
+                this.playVibrationSound();
+            }, (time - this.audioContext.currentTime) * 1000);
+
+            // Schedule next melody cycle (2.5 seconds between rings)
+            setTimeout(() => {
+                if (this.ringPlaying) {
+                    playMelody();
+                }
+            }, 2500);
+        };
+
+        playMelody();
+    }
+
+    /**
+     * Play a subtle vibration buzz sound
+     */
+    playVibrationSound() {
+        if (!this.audioContext || !this.ringPlaying) return;
+
+        try {
+            const osc = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+
+            // Low frequency buzz (like vibration motor)
+            osc.frequency.value = 80;
+            osc.type = 'sawtooth';
+
+            osc.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+
+            const now = this.audioContext.currentTime;
+
+            // Quick pulses
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.1, now + 0.02);
+            gainNode.gain.linearRampToValueAtTime(0, now + 0.08);
+            gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.1, now + 0.12);
+            gainNode.gain.linearRampToValueAtTime(0, now + 0.18);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+
+        } catch (error) {
+            console.warn('Vibration sound error:', error);
+        }
     }
 
     /**
      * Stop the phone ring sound
      */
     stopPhoneRing() {
-        console.log('Stopping phone ring sound...');
-        this.phoneRingPlayer.stop();
+        console.log('Stopping smartphone ringtone...');
+        this.ringPlaying = false;
     }
 
     /**
