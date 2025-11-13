@@ -137,21 +137,64 @@
             constructor(scene) {
                 this.scene = scene;
                 this.sounds = new Map();
-                this.musicVolume = 0.7;
+                this.musicVolume = 0.5;
                 this.sfxVolume = 0.8;
                 this.initialized = false;
                 this.audioContext = null;
+                this.backgroundMusic = null;
             }
 
             async initialize() {
                 console.log('Initializing AudioManager...');
                 try {
                     // Audio context will be created on first user interaction
+                    this.loadBackgroundMusic();
                     this.initialized = true;
                     console.log('AudioManager initialized successfully');
                 } catch (error) {
                     console.warn('Audio initialization warning:', error);
                     this.initialized = true; // Continue anyway
+                }
+            }
+
+            loadBackgroundMusic() {
+                try {
+                    this.backgroundMusic = new BABYLON.Sound(
+                        'backgroundMusic',
+                        './mixkit-echoes-188.mp3',
+                        this.scene,
+                        () => {
+                            console.log('Background music loaded successfully');
+                        },
+                        {
+                            loop: true,
+                            autoplay: false,
+                            volume: this.musicVolume
+                        }
+                    );
+                } catch (error) {
+                    console.warn('Could not load background music:', error);
+                }
+            }
+
+            playBackgroundMusic() {
+                if (this.backgroundMusic && !this.backgroundMusic.isPlaying) {
+                    console.log('Starting background music...');
+                    this.backgroundMusic.play();
+                }
+            }
+
+            stopBackgroundMusic() {
+                if (this.backgroundMusic && this.backgroundMusic.isPlaying) {
+                    console.log('Stopping background music...');
+                    this.backgroundMusic.stop();
+                }
+            }
+
+            setMusicVolume(volume) {
+                this.musicVolume = Math.max(0, Math.min(1, volume));
+                if (this.backgroundMusic) {
+                    this.backgroundMusic.setVolume(this.musicVolume);
                 }
             }
 
@@ -257,6 +300,11 @@
 
             dispose() {
                 this.stopPhoneRing();
+                this.stopBackgroundMusic();
+                if (this.backgroundMusic) {
+                    this.backgroundMusic.dispose();
+                    this.backgroundMusic = null;
+                }
                 this.sounds.forEach(sound => sound.dispose());
                 this.sounds.clear();
             }
@@ -1637,6 +1685,9 @@
                 if (startButton) {
                     startButton.style.display = 'none';
                 }
+
+                // Start background music
+                this.audioManager.playBackgroundMusic();
 
                 // Start phone ringing after delay
                 setTimeout(() => {

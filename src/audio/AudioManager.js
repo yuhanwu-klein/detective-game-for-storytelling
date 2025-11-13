@@ -7,9 +7,10 @@ export class AudioManager {
     constructor(scene) {
         this.scene = scene;
         this.sounds = new Map();
-        this.musicVolume = 0.7;
+        this.musicVolume = 0.5;
         this.sfxVolume = 0.8;
         this.initialized = false;
+        this.backgroundMusic = null;
     }
 
     /**
@@ -22,8 +23,65 @@ export class AudioManager {
         // This creates a synthetic phone ring sound since we don't have an audio file yet
         this.createPhoneRingSound();
 
+        // Load background music
+        this.loadBackgroundMusic();
+
         this.initialized = true;
         console.log('AudioManager initialized successfully');
+    }
+
+    /**
+     * Load background music file
+     */
+    loadBackgroundMusic() {
+        try {
+            this.backgroundMusic = new BABYLON.Sound(
+                'backgroundMusic',
+                './mixkit-echoes-188.mp3',
+                this.scene,
+                () => {
+                    console.log('Background music loaded successfully');
+                },
+                {
+                    loop: true,
+                    autoplay: false,
+                    volume: this.musicVolume
+                }
+            );
+        } catch (error) {
+            console.warn('Could not load background music:', error);
+        }
+    }
+
+    /**
+     * Play background music
+     */
+    playBackgroundMusic() {
+        if (this.backgroundMusic && !this.backgroundMusic.isPlaying) {
+            console.log('Starting background music...');
+            this.backgroundMusic.play();
+        }
+    }
+
+    /**
+     * Stop background music
+     */
+    stopBackgroundMusic() {
+        if (this.backgroundMusic && this.backgroundMusic.isPlaying) {
+            console.log('Stopping background music...');
+            this.backgroundMusic.stop();
+        }
+    }
+
+    /**
+     * Set background music volume
+     * @param {number} volume - Volume level (0-1)
+     */
+    setMusicVolume(volume) {
+        this.musicVolume = Math.max(0, Math.min(1, volume));
+        if (this.backgroundMusic) {
+            this.backgroundMusic.setVolume(this.musicVolume);
+        }
     }
 
     /**
@@ -198,6 +256,11 @@ export class AudioManager {
      */
     dispose() {
         this.stopPhoneRing();
+        this.stopBackgroundMusic();
+        if (this.backgroundMusic) {
+            this.backgroundMusic.dispose();
+            this.backgroundMusic = null;
+        }
         this.sounds.forEach(sound => sound.dispose());
         this.sounds.clear();
     }

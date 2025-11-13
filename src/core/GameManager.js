@@ -121,6 +121,9 @@ export class GameManager {
 
         console.log('Game initialized successfully!');
 
+        // Start background music
+        this.audioManager.playBackgroundMusic();
+
         // Auto-start phone ringing after a delay
         setTimeout(() => {
             this.phoneObject.startRinging();
