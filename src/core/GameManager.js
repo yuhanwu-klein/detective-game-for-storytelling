@@ -18,7 +18,7 @@ export class GameManager {
         this.tableObject = null;
         this.officeEnvironment = null;
         this.initialCameraRadius = 3.0;
-        this.initialCameraAlpha = Math.PI * 7 / 6;  // 210° - opposite side
+        this.initialCameraAlpha = Math.PI / 2;  // 90° - facing back wall
         this.initialCameraBeta = Math.PI / 2.5;
     }
 
@@ -46,10 +46,10 @@ export class GameManager {
 
         this.updateLoadingStatus('Setting up camera...');
 
-        // Create camera - opposite side view (210° angle)
+        // Create camera - facing back wall (90° angle)
         this.camera = new BABYLON.ArcRotateCamera(
             'camera',
-            Math.PI * 7 / 6,    // Alpha (horizontal rotation) - 210° angle (opposite side)
+            Math.PI / 2,        // Alpha (horizontal rotation) - 90° angle (facing back wall)
             Math.PI / 2.5,      // Beta (vertical rotation) - ~72° from vertical
             3.0,                // Radius (distance from target) - slightly further back
             new BABYLON.Vector3(0, 0.8, 0),  // Target position

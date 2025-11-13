@@ -111,12 +111,12 @@ export class PhoneObject {
 
         // Create materials
         const phoneMaterial = new BABYLON.StandardMaterial('phoneMaterial', this.scene);
-        phoneMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        phoneMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+        phoneMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.1, 0.1);  // Bright red
+        phoneMaterial.specularColor = new BABYLON.Color3(0.6, 0.2, 0.2);  // Red specular
         phoneMaterial.specularPower = 64;
 
         const handsetMaterial = new BABYLON.StandardMaterial('handsetMaterial', this.scene);
-        handsetMaterial.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.15);
+        handsetMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.08, 0.08);  // Darker red for handset
 
         const buttonMaterial = new BABYLON.StandardMaterial('buttonMaterial', this.scene);
         buttonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);

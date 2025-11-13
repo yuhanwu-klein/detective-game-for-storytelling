@@ -1591,12 +1591,12 @@
                 buttons.forEach(button => button.parent = this.mesh);
 
                 const phoneMaterial = new BABYLON.StandardMaterial('phoneMaterial', this.scene);
-                phoneMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-                phoneMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+                phoneMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.1, 0.1);  // Bright red
+                phoneMaterial.specularColor = new BABYLON.Color3(0.6, 0.2, 0.2);  // Red specular
                 phoneMaterial.specularPower = 64;
 
                 const handsetMaterial = new BABYLON.StandardMaterial('handsetMaterial', this.scene);
-                handsetMaterial.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.15);
+                handsetMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.08, 0.08);  // Darker red for handset
 
                 const buttonMaterial = new BABYLON.StandardMaterial('buttonMaterial', this.scene);
                 buttonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
@@ -1781,7 +1781,7 @@
                 this.tableObject = null;
                 this.officeEnvironment = null;
                 this.initialCameraRadius = 3.0;
-                this.initialCameraAlpha = Math.PI * 7 / 6;  // 210° - opposite side
+                this.initialCameraAlpha = Math.PI / 2;  // 90° - facing back wall
                 this.initialCameraBeta = Math.PI / 2.5;
             }
 
@@ -1801,10 +1801,10 @@
 
                     this.updateLoadingStatus('Setting up camera...');
 
-                    // Create camera - opposite side view (210° angle)
+                    // Create camera - facing back wall (90° angle)
                     this.camera = new BABYLON.ArcRotateCamera(
                         'camera',
-                        Math.PI * 7 / 6,    // Alpha (horizontal rotation) - 210° angle (opposite side)
+                        Math.PI / 2,        // Alpha (horizontal rotation) - 90° angle (facing back wall)
                         Math.PI / 2.5,      // Beta (vertical rotation) - ~72° from vertical
                         3.0,                // Radius (distance from target) - slightly further back
                         new BABYLON.Vector3(0, 0.8, 0),  // Target position
