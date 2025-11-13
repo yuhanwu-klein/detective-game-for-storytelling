@@ -15,6 +15,9 @@ export class GameManager {
         this.audioManager = null;
         this.phoneObject = null;
         this.tableObject = null;
+        this.initialCameraRadius = 2.5;
+        this.initialCameraAlpha = Math.PI / 2;
+        this.initialCameraBeta = Math.PI / 3;
     }
 
     /**
@@ -122,7 +125,155 @@ export class GameManager {
         // Auto-start phone ringing after a delay
         setTimeout(() => {
             this.phoneObject.startRinging();
+            this.zoomToPhone(); // Zoom camera to phone when it starts ringing
         }, 2000);
+    }
+
+    /**
+     * Zoom camera to focus on the smartphone
+     */
+    zoomToPhone() {
+        console.log('Zooming camera to phone...');
+
+        // Disable user camera control during animation
+        this.camera.detachControl();
+
+        // Create animation for camera radius (zoom)
+        const radiusAnimation = new BABYLON.Animation(
+            'cameraRadiusAnimation',
+            'radius',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const radiusKeys = [
+            { frame: 0, value: this.camera.radius },
+            { frame: 60, value: 0.4 }  // Zoom in close to the phone
+        ];
+        radiusAnimation.setKeys(radiusKeys);
+
+        // Create animation for camera beta (vertical angle)
+        const betaAnimation = new BABYLON.Animation(
+            'cameraBetaAnimation',
+            'beta',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const betaKeys = [
+            { frame: 0, value: this.camera.beta },
+            { frame: 60, value: Math.PI / 4 }  // Look down at phone
+        ];
+        betaAnimation.setKeys(betaKeys);
+
+        // Create animation for camera alpha (horizontal rotation)
+        const alphaAnimation = new BABYLON.Animation(
+            'cameraAlphaAnimation',
+            'alpha',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const alphaKeys = [
+            { frame: 0, value: this.camera.alpha },
+            { frame: 60, value: Math.PI / 2.2 }  // Slight angle adjustment
+        ];
+        alphaAnimation.setKeys(alphaKeys);
+
+        // Apply easing function for smooth animation
+        const easingFunction = new BABYLON.CubicEase();
+        easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+
+        radiusAnimation.setEasingFunction(easingFunction);
+        betaAnimation.setEasingFunction(easingFunction);
+        alphaAnimation.setEasingFunction(easingFunction);
+
+        // Run animations
+        this.scene.beginDirectAnimation(
+            this.camera,
+            [radiusAnimation, betaAnimation, alphaAnimation],
+            0,
+            60,
+            false,
+            1.0
+        );
+    }
+
+    /**
+     * Zoom camera back out to original position
+     */
+    zoomOutFromPhone() {
+        console.log('Zooming camera back out...');
+
+        // Create animation for camera radius (zoom out)
+        const radiusAnimation = new BABYLON.Animation(
+            'cameraRadiusAnimation',
+            'radius',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const radiusKeys = [
+            { frame: 0, value: this.camera.radius },
+            { frame: 60, value: this.initialCameraRadius }
+        ];
+        radiusAnimation.setKeys(radiusKeys);
+
+        // Create animation for camera beta
+        const betaAnimation = new BABYLON.Animation(
+            'cameraBetaAnimation',
+            'beta',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const betaKeys = [
+            { frame: 0, value: this.camera.beta },
+            { frame: 60, value: this.initialCameraBeta }
+        ];
+        betaAnimation.setKeys(betaKeys);
+
+        // Create animation for camera alpha
+        const alphaAnimation = new BABYLON.Animation(
+            'cameraAlphaAnimation',
+            'alpha',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        const alphaKeys = [
+            { frame: 0, value: this.camera.alpha },
+            { frame: 60, value: this.initialCameraAlpha }
+        ];
+        alphaAnimation.setKeys(alphaKeys);
+
+        // Apply easing function
+        const easingFunction = new BABYLON.CubicEase();
+        easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+
+        radiusAnimation.setEasingFunction(easingFunction);
+        betaAnimation.setEasingFunction(easingFunction);
+        alphaAnimation.setEasingFunction(easingFunction);
+
+        // Run animations and re-enable control when done
+        const animatable = this.scene.beginDirectAnimation(
+            this.camera,
+            [radiusAnimation, betaAnimation, alphaAnimation],
+            0,
+            60,
+            false,
+            1.0,
+            () => {
+                // Re-enable user camera control after animation
+                this.camera.attachControl(this.canvas, true);
+            }
+        );
     }
 
     /**
@@ -228,6 +379,9 @@ export class GameManager {
      */
     onPhonePickedUp() {
         console.log('Phone answered - triggering story event');
+
+        // Zoom camera back out
+        this.zoomOutFromPhone();
 
         // Update UI
         setTimeout(() => {
