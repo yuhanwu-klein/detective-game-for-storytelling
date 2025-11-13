@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detective Game - Phone Scene</title>
+
+    <!-- Babylon.js from CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        #ui-overlay h2 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        #ui-overlay p {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        #phone-status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .status-ringing {
+            background: rgba(255, 152, 0, 0.2) !important;
+            border-left-color: #FF9800 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <p>Loading scene...</p>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="ui-overlay">
+        <h2>🔍 Detective Game</h2>
+        <p><strong>Scene:</strong> Office Desk</p>
+        <p><strong>Controls:</strong></p>
+        <p>• Click/tap the phone to answer</p>
+        <p>• Mouse drag to rotate camera</p>
+        <p>• Scroll to zoom</p>
+
+        <div id="phone-status">
+            <strong>Phone Status:</strong> <span id="status-text">Idle</span>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // AudioManager Class
+        // ============================================
+        class AudioManager {
+            constructor(scene) {
+                this.scene = scene;
+                this.sounds = new Map();
+                this.musicVolume = 0.7;
+                this.sfxVolume = 0.8;
+                this.initialized = false;
+            }
+
+            async initialize() {
+                console.log('Initializing AudioManager...');
+                this.createPhoneRingSound();
+                this.initialized = true;
+                console.log('AudioManager initialized successfully');
+            }
+
+            createPhoneRingSound() {
+                const audioContext = BABYLON.Engine.audioEngine.audioContext;
+
+                this.phoneRingPlayer = {
+                    isPlaying: false,
+                    oscillator: null,
+                    gainNode: null,
+
+                    play: () => {
+                        if (this.phoneRingPlayer.isPlaying) return;
+                        this.phoneRingPlayer.isPlaying = true;
+                        this.playRingTone();
+                    },
+
+                    stop: () => {
+                        this.phoneRingPlayer.isPlaying = false;
+                        if (this.phoneRingPlayer.oscillator) {
+                            this.phoneRingPlayer.oscillator.stop();
+                            this.phoneRingPlayer.oscillator = null;
+                        }
+                    }
+                };
+            }
+
+            playRingTone() {
+                const audioContext = BABYLON.Engine.audioEngine.audioContext;
+
+                const playBurst = () => {
+                    if (!this.phoneRingPlayer.isPlaying) return;
+
+                    const osc1 = audioContext.createOscillator();
+                    const osc2 = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    osc1.frequency.value = 440;
+                    osc2.frequency.value = 480;
+                    osc1.type = 'sine';
+                    osc2.type = 'sine';
+
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.3, audioContext.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+
+                    osc1.start(audioContext.currentTime);
+                    osc2.start(audioContext.currentTime);
+                    osc1.stop(audioContext.currentTime + 0.4);
+                    osc2.stop(audioContext.currentTime + 0.4);
+
+                    setTimeout(() => {
+                        if (!this.phoneRingPlayer.isPlaying) return;
+
+                        const osc3 = audioContext.createOscillator();
+                        const osc4 = audioContext.createOscillator();
+                        const gainNode2 = audioContext.createGain();
+
+                        osc3.frequency.value = 440;
+                        osc4.frequency.value = 480;
+                        osc3.type = 'sine';
+                        osc4.type = 'sine';
+
+                        osc3.connect(gainNode2);
+                        osc4.connect(gainNode2);
+                        gainNode2.connect(audioContext.destination);
+
+                        gainNode2.gain.setValueAtTime(0, audioContext.currentTime);
+                        gainNode2.gain.linearRampToValueAtTime(this.sfxVolume * 0.3, audioContext.currentTime + 0.05);
+                        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+
+                        osc3.start(audioContext.currentTime);
+                        osc4.start(audioContext.currentTime);
+                        osc3.stop(audioContext.currentTime + 0.4);
+                        osc4.stop(audioContext.currentTime + 0.4);
+                    }, 500);
+
+                    setTimeout(() => {
+                        if (this.phoneRingPlayer.isPlaying) {
+                            playBurst();
+                        }
+                    }, 2000);
+                };
+
+                playBurst();
+            }
+
+            playPhoneRing() {
+                if (!this.initialized) {
+                    console.warn('AudioManager not initialized');
+                    return;
+                }
+                console.log('Playing phone ring sound...');
+                this.phoneRingPlayer.play();
+            }
+
+            stopPhoneRing() {
+                console.log('Stopping phone ring sound...');
+                this.phoneRingPlayer.stop();
+            }
+
+            dispose() {
+                this.stopPhoneRing();
+                this.sounds.forEach(sound => sound.dispose());
+                this.sounds.clear();
+            }
+        }
+
+        // ============================================
+        // TableObject Class
+        // ============================================
+        class TableObject {
+            constructor(scene, position = new BABYLON.Vector3(0, 0, 0)) {
+                this.scene = scene;
+                this.position = position;
+                this.mesh = null;
+                this.initialize();
+            }
+
+            initialize() {
+                console.log('Creating table object...');
+
+                const tableTop = BABYLON.MeshBuilder.CreateBox('tableTop', {
+                    width: 1.2,
+                    height: 0.05,
+                    depth: 0.8
+                }, this.scene);
+                tableTop.position.y = 0.75;
+
+                const legPositions = [
+                    { x: -0.5, z: -0.35 },
+                    { x: 0.5, z: -0.35 },
+                    { x: -0.5, z: 0.35 },
+                    { x: 0.5, z: 0.35 }
+                ];
+
+                const legs = [];
+                legPositions.forEach((pos, i) => {
+                    const leg = BABYLON.MeshBuilder.CreateCylinder(`tableLeg${i}`, {
+                        height: 0.75,
+                        diameter: 0.05,
+                        tessellation: 16
+                    }, this.scene);
+                    leg.position.x = pos.x;
+                    leg.position.y = 0.375;
+                    leg.position.z = pos.z;
+                    legs.push(leg);
+                });
+
+                const rim = BABYLON.MeshBuilder.CreateBox('tableRim', {
+                    width: 1.25,
+                    height: 0.03,
+                    depth: 0.85
+                }, this.scene);
+                rim.position.y = 0.725;
+
+                this.mesh = BABYLON.Mesh.CreateBox('table', 0.01, this.scene);
+                this.mesh.isVisible = false;
+
+                tableTop.parent = this.mesh;
+                rim.parent = this.mesh;
+                legs.forEach(leg => leg.parent = this.mesh);
+
+                const woodMaterial = new BABYLON.StandardMaterial('woodMaterial', this.scene);
+                woodMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.25, 0.15);
+                woodMaterial.specularColor = new BABYLON.Color3(0.2, 0.15, 0.1);
+                woodMaterial.specularPower = 16;
+
+                const woodTexture = new BABYLON.DynamicTexture('woodTexture', 512, this.scene);
+                const ctx = woodTexture.getContext();
+
+                ctx.fillStyle = '#5C4033';
+                ctx.fillRect(0, 0, 512, 512);
+
+                for (let i = 0; i < 512; i += 2) {
+                    const brightness = 0.3 + Math.random() * 0.2;
+                    const color = Math.floor(brightness * 255);
+                    ctx.strokeStyle = `rgb(${color * 0.4}, ${color * 0.25}, ${color * 0.15})`;
+                    ctx.lineWidth = 1 + Math.random();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(512, i + Math.sin(i * 0.1) * 3);
+                    ctx.stroke();
+                }
+
+                woodTexture.update();
+                woodMaterial.diffuseTexture = woodTexture;
+
+                const legMaterial = new BABYLON.StandardMaterial('legMaterial', this.scene);
+                legMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.2, 0.12);
+                legMaterial.specularColor = new BABYLON.Color3(0.15, 0.1, 0.05);
+
+                tableTop.material = woodMaterial;
+                rim.material = woodMaterial;
+                legs.forEach(leg => leg.material = legMaterial);
+
+                this.mesh.position = this.position;
+
+                console.log('Table object created successfully');
+            }
+
+            getTopSurfaceY() {
+                return this.position.y + 0.775;
+            }
+
+            dispose() {
+                if (this.mesh) {
+                    this.mesh.dispose();
+                }
+            }
+        }
+
+        // ============================================
+        // PhoneObject Class
+        // ============================================
+        class PhoneObject {
+            constructor(scene, audioManager, position = new BABYLON.Vector3(0, 0.85, 0)) {
+                this.scene = scene;
+                this.audioManager = audioManager;
+                this.position = position;
+                this.mesh = null;
+                this.isRinging = false;
+                this.isPickedUp = false;
+                this.shakeAnimation = null;
+                this.originalPosition = position.clone();
+                this.onPickUpCallback = null;
+
+                this.initialize();
+            }
+
+            initialize() {
+                console.log('Creating phone object...');
+
+                const phoneBody = BABYLON.MeshBuilder.CreateBox('phoneBody', {
+                    width: 0.15,
+                    height: 0.05,
+                    depth: 0.25
+                }, this.scene);
+
+                const handset = BABYLON.MeshBuilder.CreateCylinder('handset', {
+                    height: 0.2,
+                    diameter: 0.04,
+                    tessellation: 16
+                }, this.scene);
+                handset.rotation.x = Math.PI / 2;
+                handset.rotation.z = Math.PI / 6;
+                handset.position.y = 0.04;
+                handset.position.x = -0.02;
+
+                const earpiece = BABYLON.MeshBuilder.CreateSphere('earpiece', {
+                    diameter: 0.05,
+                    segments: 16
+                }, this.scene);
+                earpiece.position.y = 0.04;
+                earpiece.position.x = 0.06;
+                earpiece.position.z = 0.08;
+
+                const mouthpiece = BABYLON.MeshBuilder.CreateSphere('mouthpiece', {
+                    diameter: 0.05,
+                    segments: 16
+                }, this.scene);
+                mouthpiece.position.y = 0.04;
+                mouthpiece.position.x = -0.1;
+                mouthpiece.position.z = -0.08;
+
+                const buttons = [];
+                const buttonPositions = [
+                    [-0.04, 0.04], [0, 0.04], [0.04, 0.04],
+                    [-0.04, 0], [0, 0], [0.04, 0],
+                    [-0.04, -0.04], [0, -0.04], [0.04, -0.04],
+                    [-0.04, -0.08], [0, -0.08], [0.04, -0.08]
+                ];
+
+                buttonPositions.forEach((pos, i) => {
+                    const button = BABYLON.MeshBuilder.CreateCylinder(`button${i}`, {
+                        height: 0.01,
+                        diameter: 0.02,
+                        tessellation: 16
+                    }, this.scene);
+                    button.position.x = pos[0];
+                    button.position.y = 0.031;
+                    button.position.z = pos[1];
+                    buttons.push(button);
+                });
+
+                const cordPath = [];
+                for (let i = 0; i < 20; i++) {
+                    const angle = i * Math.PI / 4;
+                    cordPath.push(new BABYLON.Vector3(
+                        -0.075 + Math.cos(angle) * 0.01,
+                        0.025 - i * 0.003,
+                        -0.12 + i * 0.005
+                    ));
+                }
+                const cord = BABYLON.MeshBuilder.CreateTube('cord', {
+                    path: cordPath,
+                    radius: 0.002,
+                    tessellation: 8,
+                    cap: BABYLON.Mesh.CAP_ALL
+                }, this.scene);
+
+                this.mesh = BABYLON.Mesh.CreateBox('phone', 0.01, this.scene);
+                this.mesh.isVisible = false;
+
+                phoneBody.parent = this.mesh;
+                handset.parent = this.mesh;
+                earpiece.parent = this.mesh;
+                mouthpiece.parent = this.mesh;
+                cord.parent = this.mesh;
+                buttons.forEach(button => button.parent = this.mesh);
+
+                const phoneMaterial = new BABYLON.StandardMaterial('phoneMaterial', this.scene);
+                phoneMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+                phoneMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+                phoneMaterial.specularPower = 64;
+
+                const handsetMaterial = new BABYLON.StandardMaterial('handsetMaterial', this.scene);
+                handsetMaterial.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.15);
+
+                const buttonMaterial = new BABYLON.StandardMaterial('buttonMaterial', this.scene);
+                buttonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+                buttonMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+                const cordMaterial = new BABYLON.StandardMaterial('cordMaterial', this.scene);
+                cordMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+                phoneBody.material = phoneMaterial;
+                handset.material = handsetMaterial;
+                earpiece.material = handsetMaterial;
+                mouthpiece.material = handsetMaterial;
+                cord.material = cordMaterial;
+                buttons.forEach(button => button.material = buttonMaterial);
+
+                this.mesh.position = this.position;
+
+                this.setupInteraction();
+
+                console.log('Phone object created successfully');
+            }
+
+            setupInteraction() {
+                this.mesh.getChildMeshes().forEach(mesh => {
+                    mesh.isPickable = true;
+                });
+
+                this.mesh.actionManager = new BABYLON.ActionManager(this.scene);
+
+                this.mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPickTrigger,
+                        () => this.handlePickup()
+                    )
+                );
+
+                this.mesh.getChildMeshes().forEach(childMesh => {
+                    childMesh.actionManager = new BABYLON.ActionManager(this.scene);
+                    childMesh.actionManager.registerAction(
+                        new BABYLON.ExecuteCodeAction(
+                            BABYLON.ActionManager.OnPickTrigger,
+                            () => this.handlePickup()
+                        )
+                    );
+
+                    childMesh.actionManager.registerAction(
+                        new BABYLON.ExecuteCodeAction(
+                            BABYLON.ActionManager.OnPointerOverTrigger,
+                            () => {
+                                if (this.isRinging) {
+                                    this.scene.getEngine().getRenderingCanvas().style.cursor = 'pointer';
+                                }
+                            }
+                        )
+                    );
+
+                    childMesh.actionManager.registerAction(
+                        new BABYLON.ExecuteCodeAction(
+                            BABYLON.ActionManager.OnPointerOutTrigger,
+                            () => {
+                                this.scene.getEngine().getRenderingCanvas().style.cursor = 'default';
+                            }
+                        )
+                    );
+                });
+            }
+
+            handlePickup() {
+                if (this.isRinging) {
+                    console.log('Phone answered!');
+                    this.stopRinging();
+                    this.isPickedUp = true;
+
+                    if (this.onPickUpCallback) {
+                        this.onPickUpCallback();
+                    }
+                }
+            }
+
+            startRinging() {
+                if (this.isRinging) return;
+
+                console.log('Phone is ringing...');
+                this.isRinging = true;
+                this.isPickedUp = false;
+
+                this.audioManager.playPhoneRing();
+                this.startShakeAnimation();
+                this.updatePhoneStatus('Ringing...', true);
+            }
+
+            stopRinging() {
+                if (!this.isRinging) return;
+
+                console.log('Phone stopped ringing');
+                this.isRinging = false;
+
+                this.audioManager.stopPhoneRing();
+                this.stopShakeAnimation();
+                this.updatePhoneStatus('Answered', false);
+
+                this.mesh.position = this.originalPosition.clone();
+                this.mesh.rotation = BABYLON.Vector3.Zero();
+            }
+
+            startShakeAnimation() {
+                const shakeStrength = 0.008;
+                const shakeSpeed = 30;
+                const rotationStrength = 0.05;
+
+                let elapsed = 0;
+                const startPosition = this.mesh.position.clone();
+                const startRotation = this.mesh.rotation.clone();
+
+                this.shakeAnimation = this.scene.onBeforeRenderObservable.add(() => {
+                    if (!this.isRinging) return;
+
+                    elapsed += this.scene.getEngine().getDeltaTime() / 1000;
+
+                    const shakeX = Math.sin(elapsed * shakeSpeed) * shakeStrength;
+                    const shakeZ = Math.cos(elapsed * shakeSpeed * 1.3) * shakeStrength;
+                    const bounceY = Math.abs(Math.sin(elapsed * shakeSpeed * 0.5)) * shakeStrength * 0.5;
+                    const rotationY = Math.sin(elapsed * shakeSpeed * 0.8) * rotationStrength;
+                    const rotationZ = Math.cos(elapsed * shakeSpeed * 1.1) * rotationStrength * 0.5;
+
+                    this.mesh.position.x = startPosition.x + shakeX;
+                    this.mesh.position.y = startPosition.y + bounceY;
+                    this.mesh.position.z = startPosition.z + shakeZ;
+
+                    this.mesh.rotation.y = startRotation.y + rotationY;
+                    this.mesh.rotation.z = startRotation.z + rotationZ;
+                });
+            }
+
+            stopShakeAnimation() {
+                if (this.shakeAnimation) {
+                    this.scene.onBeforeRenderObservable.remove(this.shakeAnimation);
+                    this.shakeAnimation = null;
+                }
+            }
+
+            updatePhoneStatus(status, isRinging) {
+                const statusElement = document.getElementById('status-text');
+                const statusContainer = document.getElementById('phone-status');
+
+                if (statusElement) {
+                    statusElement.textContent = status;
+                }
+
+                if (statusContainer) {
+                    if (isRinging) {
+                        statusContainer.classList.add('status-ringing');
+                    } else {
+                        statusContainer.classList.remove('status-ringing');
+                    }
+                }
+            }
+
+            setOnPickUpCallback(callback) {
+                this.onPickUpCallback = callback;
+            }
+
+            dispose() {
+                this.stopRinging();
+                if (this.mesh) {
+                    this.mesh.dispose();
+                }
+            }
+        }
+
+        // ============================================
+        // GameManager Class
+        // ============================================
+        class GameManager {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.engine = null;
+                this.scene = null;
+                this.camera = null;
+                this.audioManager = null;
+                this.phoneObject = null;
+                this.tableObject = null;
+            }
+
+            async initialize() {
+                console.log('Initializing game...');
+
+                this.updateLoadingStatus('Creating 3D engine...');
+
+                this.engine = new BABYLON.Engine(this.canvas, true, {
+                    preserveDrawingBuffer: true,
+                    stencil: true
+                });
+
+                this.scene = new BABYLON.Scene(this.engine);
+                this.scene.clearColor = new BABYLON.Color4(0.85, 0.88, 0.92, 1);
+
+                this.updateLoadingStatus('Setting up camera...');
+
+                this.camera = new BABYLON.ArcRotateCamera(
+                    'camera',
+                    Math.PI / 2,
+                    Math.PI / 3,
+                    2.5,
+                    new BABYLON.Vector3(0, 0.8, 0),
+                    this.scene
+                );
+
+                this.camera.attachControl(this.canvas, true);
+                this.camera.lowerRadiusLimit = 1.5;
+                this.camera.upperRadiusLimit = 4;
+                this.camera.lowerBetaLimit = 0.1;
+                this.camera.upperBetaLimit = Math.PI / 2;
+
+                this.updateLoadingStatus('Creating lights...');
+
+                this.setupLighting();
+
+                this.updateLoadingStatus('Initializing audio system...');
+
+                this.audioManager = new AudioManager(this.scene);
+                await this.audioManager.initialize();
+
+                this.updateLoadingStatus('Creating table...');
+
+                this.tableObject = new TableObject(this.scene, new BABYLON.Vector3(0, 0, 0));
+
+                this.updateLoadingStatus('Creating phone...');
+
+                const tableTop = this.tableObject.getTopSurfaceY();
+                this.phoneObject = new PhoneObject(
+                    this.scene,
+                    this.audioManager,
+                    new BABYLON.Vector3(0, tableTop, 0)
+                );
+
+                this.phoneObject.setOnPickUpCallback(() => {
+                    this.onPhonePickedUp();
+                });
+
+                this.updateLoadingStatus('Setting up environment...');
+
+                this.createGround();
+                this.createEnvironment();
+
+                this.updateLoadingStatus('Starting game...');
+
+                setTimeout(() => {
+                    const loadingElement = document.getElementById('loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+                }, 500);
+
+                this.engine.runRenderLoop(() => {
+                    this.scene.render();
+                });
+
+                window.addEventListener('resize', () => {
+                    this.engine.resize();
+                });
+
+                console.log('Game initialized successfully!');
+
+                setTimeout(() => {
+                    this.phoneObject.startRinging();
+                }, 2000);
+            }
+
+            setupLighting() {
+                const ambientLight = new BABYLON.HemisphericLight(
+                    'ambientLight',
+                    new BABYLON.Vector3(0, 1, 0),
+                    this.scene
+                );
+                ambientLight.intensity = 0.9;
+                ambientLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
+                ambientLight.specular = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+                const mainLight = new BABYLON.DirectionalLight(
+                    'mainLight',
+                    new BABYLON.Vector3(-1, -2, -1),
+                    this.scene
+                );
+                mainLight.position = new BABYLON.Vector3(2, 3, 2);
+                mainLight.intensity = 1.2;
+                mainLight.diffuse = new BABYLON.Color3(1, 0.98, 0.92);
+
+                const rimLight = new BABYLON.PointLight(
+                    'rimLight',
+                    new BABYLON.Vector3(-1, 2, 1),
+                    this.scene
+                );
+                rimLight.intensity = 0.3;
+                rimLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+
+                const deskLamp = new BABYLON.SpotLight(
+                    'deskLamp',
+                    new BABYLON.Vector3(0.5, 2, -0.3),
+                    new BABYLON.Vector3(0, -1, 0.2),
+                    Math.PI / 3,
+                    2,
+                    this.scene
+                );
+                deskLamp.intensity = 0.5;
+                deskLamp.diffuse = new BABYLON.Color3(1, 0.9, 0.7);
+            }
+
+            createGround() {
+                const ground = BABYLON.MeshBuilder.CreateGround('ground', {
+                    width: 10,
+                    height: 10
+                }, this.scene);
+
+                const groundMaterial = new BABYLON.StandardMaterial('groundMaterial', this.scene);
+                groundMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.78, 0.82);
+                groundMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+
+                ground.material = groundMaterial;
+                ground.receiveShadows = true;
+            }
+
+            createEnvironment() {
+                const backWall = BABYLON.MeshBuilder.CreatePlane('backWall', {
+                    width: 10,
+                    height: 5
+                }, this.scene);
+                backWall.position.z = 3;
+                backWall.position.y = 2.5;
+
+                const wallMaterial = new BABYLON.StandardMaterial('wallMaterial', this.scene);
+                wallMaterial.diffuseColor = new BABYLON.Color3(0.88, 0.90, 0.92);
+                wallMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+                backWall.material = wallMaterial;
+
+                this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+                this.scene.fogColor = new BABYLON.Color3(0.85, 0.88, 0.92);
+                this.scene.fogStart = 5.0;
+                this.scene.fogEnd = 10.0;
+            }
+
+            updateLoadingStatus(status) {
+                const loadingElement = document.getElementById('loading');
+                if (loadingElement) {
+                    loadingElement.innerHTML = `<p>${status}</p>`;
+                }
+            }
+
+            onPhonePickedUp() {
+                console.log('Phone answered - triggering story event');
+
+                setTimeout(() => {
+                    this.phoneObject.updatePhoneStatus('Call ended', false);
+                }, 3000);
+            }
+
+            dispose() {
+                if (this.phoneObject) this.phoneObject.dispose();
+                if (this.tableObject) this.tableObject.dispose();
+                if (this.audioManager) this.audioManager.dispose();
+                if (this.scene) this.scene.dispose();
+                if (this.engine) this.engine.dispose();
+            }
+        }
+
+        // ============================================
+        // Main Entry Point
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('=== Detective Game Starting ===');
+
+            const canvas = document.getElementById('renderCanvas');
+
+            if (!canvas) {
+                console.error('Canvas element not found!');
+                return;
+            }
+
+            const gameManager = new GameManager(canvas);
+
+            gameManager.initialize().catch(error => {
+                console.error('Failed to initialize game:', error);
+
+                const loadingElement = document.getElementById('loading');
+                if (loadingElement) {
+                    loadingElement.innerHTML = `
+                        <p style="color: #ff4444;">Error loading game:</p>
+                        <p style="font-size: 14px;">${error.message}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Please refresh the page to try again.</p>
+                    `;
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                console.log('Cleaning up game resources...');
+                gameManager.dispose();
+            });
+        });
+
+        console.log('Detective Game module loaded');
+    </script>
+</body>
+</html>
