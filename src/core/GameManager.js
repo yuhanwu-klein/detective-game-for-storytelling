@@ -124,6 +124,11 @@ export class GameManager {
         // Start background music
         this.audioManager.playBackgroundMusic();
 
+        // Start cinematic camera intro animation
+        setTimeout(() => {
+            this.startCameraIntroAnimation();
+        }, 800);
+
         // Auto-start phone ringing after a delay
         setTimeout(() => {
             this.phoneObject.startRinging();
@@ -176,6 +181,62 @@ export class GameManager {
         deskLamp.diffuse = new BABYLON.Color3(1, 0.9, 0.7);
     }
 
+
+    /**
+     * Start cinematic camera zoom intro animation
+     * Smoothly zooms camera towards the telephone
+     */
+    startCameraIntroAnimation() {
+        console.log('Starting camera intro animation...');
+
+        // Create animation for camera radius (zoom in effect)
+        const radiusAnimation = new BABYLON.Animation(
+            'cameraRadiusZoom',
+            'radius',
+            60, // 60 fps
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        // Animation keyframes: zoom from 3.0 to 2.2
+        const radiusKeys = [
+            { frame: 0, value: 3.0 },
+            { frame: 120, value: 2.2 } // 2 seconds at 60fps
+        ];
+
+        radiusAnimation.setKeys(radiusKeys);
+
+        // Add easing function for smooth motion
+        const easingFunction = new BABYLON.CubicEase();
+        easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+        radiusAnimation.setEasingFunction(easingFunction);
+
+        // Create animation for camera beta (vertical angle adjustment)
+        const betaAnimation = new BABYLON.Animation(
+            'cameraBetaAdjust',
+            'beta',
+            60,
+            BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+            BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+        );
+
+        // Slightly adjust vertical angle to focus on phone
+        const betaKeys = [
+            { frame: 0, value: Math.PI / 2.5 },
+            { frame: 120, value: Math.PI / 2.8 } // Slightly lower angle
+        ];
+
+        betaAnimation.setKeys(betaKeys);
+        betaAnimation.setEasingFunction(easingFunction);
+
+        // Apply animations to camera
+        this.camera.animations = [radiusAnimation, betaAnimation];
+
+        // Run the animation
+        this.scene.beginAnimation(this.camera, 0, 120, false, 1.0, () => {
+            console.log('Camera intro animation complete');
+        });
+    }
 
     /**
      * Update loading status text
