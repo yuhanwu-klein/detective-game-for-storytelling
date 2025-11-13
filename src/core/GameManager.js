@@ -136,39 +136,51 @@ export class GameManager {
     }
 
     /**
-     * Set up scene lighting
+     * Set up scene lighting with warm, atmospheric tones
      */
     setupLighting() {
-        // Ambient light (soft overall illumination)
+        // Warm ambient light (cozy overall illumination)
         const ambientLight = new BABYLON.HemisphericLight(
             'ambientLight',
             new BABYLON.Vector3(0, 1, 0),
             this.scene
         );
-        ambientLight.intensity = 0.9;
-        ambientLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
-        ambientLight.specular = new BABYLON.Color3(0.5, 0.5, 0.5);
+        ambientLight.intensity = 0.6;
+        ambientLight.diffuse = new BABYLON.Color3(1, 0.92, 0.82);  // Warmer tone
+        ambientLight.specular = new BABYLON.Color3(0.4, 0.35, 0.3);
+        ambientLight.groundColor = new BABYLON.Color3(0.3, 0.25, 0.2);  // Warm ground reflection
 
-        // Main directional light (sun/key light)
+        // Main directional light (warm sunlight through window)
         const mainLight = new BABYLON.DirectionalLight(
             'mainLight',
             new BABYLON.Vector3(-1, -2, -1),
             this.scene
         );
         mainLight.position = new BABYLON.Vector3(2, 3, 2);
-        mainLight.intensity = 1.2;
-        mainLight.diffuse = new BABYLON.Color3(1, 0.98, 0.92);
+        mainLight.intensity = 0.8;
+        mainLight.diffuse = new BABYLON.Color3(1, 0.88, 0.7);  // Golden hour lighting
 
-        // Rim light (backlight for depth)
-        const rimLight = new BABYLON.PointLight(
-            'rimLight',
-            new BABYLON.Vector3(-1, 2, 1),
+        // Warm fill light (bounced light effect)
+        const fillLight = new BABYLON.PointLight(
+            'fillLight',
+            new BABYLON.Vector3(1.5, 1.5, -1),
             this.scene
         );
-        rimLight.intensity = 0.3;
-        rimLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+        fillLight.intensity = 0.4;
+        fillLight.diffuse = new BABYLON.Color3(0.95, 0.8, 0.65);  // Warm fill
+        fillLight.range = 6;
 
-        // Desk lamp (spot light on table)
+        // Rim light (warm backlight for depth)
+        const rimLight = new BABYLON.PointLight(
+            'rimLight',
+            new BABYLON.Vector3(-1.5, 2, 1.5),
+            this.scene
+        );
+        rimLight.intensity = 0.35;
+        rimLight.diffuse = new BABYLON.Color3(1, 0.85, 0.6);  // Warm edge light
+        rimLight.range = 5;
+
+        // Desk lamp (warm spot light on table)
         const deskLamp = new BABYLON.SpotLight(
             'deskLamp',
             new BABYLON.Vector3(0.5, 2, -0.3),
@@ -177,8 +189,20 @@ export class GameManager {
             2,
             this.scene
         );
-        deskLamp.intensity = 0.5;
-        deskLamp.diffuse = new BABYLON.Color3(1, 0.9, 0.7);
+        deskLamp.intensity = 0.7;
+        deskLamp.diffuse = new BABYLON.Color3(1, 0.85, 0.55);  // Warm incandescent glow
+
+        // Window light (soft warm light from outside)
+        const windowLight = new BABYLON.SpotLight(
+            'windowLight',
+            new BABYLON.Vector3(-1.5, 2.5, 2.8),
+            new BABYLON.Vector3(0.3, -0.5, -0.8),
+            Math.PI / 2.5,
+            3,
+            this.scene
+        );
+        windowLight.intensity = 0.5;
+        windowLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);  // Soft daylight
     }
 
 

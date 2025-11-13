@@ -451,6 +451,7 @@
                 this.createInvestigationBoard(); // New! Detective case board
                 this.createDeskLamp(); // New! Desk lamp detail
                 this.createWallDecorations();
+                this.createPlants(); // Add decorative plants
                 this.createCeiling();
 
                 console.log('Detailed detective office environment created successfully');
@@ -506,6 +507,59 @@
                 this.materials.cork.diffuseColor = new BABYLON.Color3(0.65, 0.5, 0.35);
                 this.materials.cork.specularColor = new BABYLON.Color3(0.1, 0.08, 0.05);
                 this.materials.cork.specularPower = 8;
+
+                // Concrete/Plaster material with texture
+                this.materials.concrete = new BABYLON.StandardMaterial('concreteMat', this.scene);
+                const concreteTexture = new BABYLON.DynamicTexture('concreteTexture', 512, this.scene);
+                const ctx = concreteTexture.getContext();
+
+                // Base plaster color
+                ctx.fillStyle = '#C8BFB0';
+                ctx.fillRect(0, 0, 512, 512);
+
+                // Add concrete texture noise
+                for (let i = 0; i < 8000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    const shade = 0.9 + Math.random() * 0.2;
+                    const size = 1 + Math.random() * 2;
+                    ctx.fillStyle = `rgba(${180 * shade}, ${170 * shade}, ${155 * shade}, 0.15)`;
+                    ctx.fillRect(x, y, size, size);
+                }
+
+                // Add subtle cracks
+                for (let i = 0; i < 15; i++) {
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+                    ctx.lineWidth = 0.5 + Math.random();
+                    ctx.beginPath();
+                    const startX = Math.random() * 512;
+                    const startY = Math.random() * 512;
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(startX + (Math.random() - 0.5) * 60, startY + (Math.random() - 0.5) * 60);
+                    ctx.stroke();
+                }
+
+                this.materials.concrete.diffuseTexture = concreteTexture;
+                this.materials.concrete.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05);
+                this.materials.concrete.specularPower = 4;
+
+                // Plant foliage material (for leaves)
+                this.materials.foliage = new BABYLON.StandardMaterial('foliageMat', this.scene);
+                this.materials.foliage.diffuseColor = new BABYLON.Color3(0.2, 0.45, 0.25);
+                this.materials.foliage.specularColor = new BABYLON.Color3(0.15, 0.25, 0.18);
+                this.materials.foliage.specularPower = 16;
+
+                // Terracotta pot material
+                this.materials.terracotta = new BABYLON.StandardMaterial('terracottaMat', this.scene);
+                this.materials.terracotta.diffuseColor = new BABYLON.Color3(0.65, 0.35, 0.25);
+                this.materials.terracotta.specularColor = new BABYLON.Color3(0.2, 0.15, 0.12);
+                this.materials.terracotta.specularPower = 16;
+
+                // Soil material
+                this.materials.soil = new BABYLON.StandardMaterial('soilMat', this.scene);
+                this.materials.soil.diffuseColor = new BABYLON.Color3(0.25, 0.18, 0.12);
+                this.materials.soil.specularColor = new BABYLON.Color3(0.05, 0.04, 0.03);
+                this.materials.soil.specularPower = 4;
             }
 
             /**
@@ -579,15 +633,15 @@
             }
 
             /**
-             * Create walls for compact room
+             * Create walls for compact room with concrete/plaster texture
              */
             createWalls() {
                 const wallHeight = 3.2;
 
-                // Wall material with slight texture variation
-                const wallMaterial = new BABYLON.StandardMaterial('wallMaterial', this.scene);
-                wallMaterial.diffuseColor = new BABYLON.Color3(0.78, 0.74, 0.68);
-                wallMaterial.specularColor = new BABYLON.Color3(0.08, 0.08, 0.08);
+                // Use concrete material for textured walls
+                // Scale texture appropriately
+                this.materials.concrete.diffuseTexture.uScale = 1.5;
+                this.materials.concrete.diffuseTexture.vScale = 2;
 
                 // Back wall
                 const backWall = BABYLON.MeshBuilder.CreatePlane('backWall', {
@@ -596,7 +650,7 @@
                 }, this.scene);
                 backWall.position.z = 3;
                 backWall.position.y = wallHeight / 2;
-                backWall.material = wallMaterial;
+                backWall.material = this.materials.concrete;
                 this.meshes.push(backWall);
 
                 // Left wall
@@ -607,7 +661,7 @@
                 leftWall.position.x = -2.5;
                 leftWall.position.y = wallHeight / 2;
                 leftWall.rotation.y = Math.PI / 2;
-                leftWall.material = wallMaterial;
+                leftWall.material = this.materials.concrete;
                 this.meshes.push(leftWall);
 
                 // Right wall
@@ -618,7 +672,7 @@
                 rightWall.position.x = 2.5;
                 rightWall.position.y = wallHeight / 2;
                 rightWall.rotation.y = -Math.PI / 2;
-                rightWall.material = wallMaterial;
+                rightWall.material = this.materials.concrete;
                 this.meshes.push(rightWall);
 
                 // Baseboards with wood material
@@ -745,13 +799,36 @@
                     this.meshes.push(panel);
                 }
 
-                // Brass door knob
-                const knob = BABYLON.MeshBuilder.CreateSphere('doorKnob', {
-                    diameter: 0.065
+                // Brass door handle assembly
+                // Backplate
+                const handlePlate = BABYLON.MeshBuilder.CreateBox('handlePlate', {
+                    width: 0.08,
+                    height: 0.18,
+                    depth: 0.008
                 }, this.scene);
-                knob.position.set(doorX - 0.35, doorY, doorZ + 0.08);
+                handlePlate.position.set(doorX - 0.35, doorY, doorZ + 0.075);
+                handlePlate.material = this.materials.brass;
+                this.meshes.push(handlePlate);
+
+                // Door knob
+                const knob = BABYLON.MeshBuilder.CreateSphere('doorKnob', {
+                    diameter: 0.065,
+                    segments: 16
+                }, this.scene);
+                knob.position.set(doorX - 0.35, doorY, doorZ + 0.095);
                 knob.material = this.materials.brass;
                 this.meshes.push(knob);
+
+                // Keyhole cover
+                const keyhole = BABYLON.MeshBuilder.CreateCylinder('keyhole', {
+                    height: 0.01,
+                    diameter: 0.018,
+                    tessellation: 16
+                }, this.scene);
+                keyhole.rotation.x = Math.PI / 2;
+                keyhole.position.set(doorX - 0.35, doorY - 0.06, doorZ + 0.08);
+                keyhole.material = this.materials.brass;
+                this.meshes.push(keyhole);
 
                 // Frosted glass window in door
                 const doorWindow = BABYLON.MeshBuilder.CreateBox('doorWindow', {
@@ -815,6 +892,26 @@
                     labelMat.diffuseColor = new BABYLON.Color3(0.85, 0.82, 0.75);
                     label.material = labelMat;
                     this.meshes.push(label);
+
+                    // Decorative drawer border lines (ribbed pattern)
+                    for (let side = 0; side < 2; side++) {
+                        const borderLine = BABYLON.MeshBuilder.CreateBox('drawerBorder', {
+                            width: side === 0 ? 0.46 : 0.28,
+                            height: side === 0 ? 0.006 : 0.006,
+                            depth: 0.003
+                        }, this.scene);
+                        const xOffset = side === 0 ? 0 : 0;
+                        const yOffset = side === 0 ? 0.14 : -0.14;
+                        borderLine.position.set(
+                            cabinetX + xOffset,
+                            0.18 + (i * 0.31) + yOffset,
+                            cabinetZ + 0.252
+                        );
+                        const borderMat = new BABYLON.StandardMaterial('borderMat', this.scene);
+                        borderMat.diffuseColor = new BABYLON.Color3(0.28, 0.28, 0.3);
+                        borderLine.material = borderMat;
+                        this.meshes.push(borderLine);
+                    }
                 }
 
                 // Cabinet top with some files/folders
@@ -1280,6 +1377,108 @@
             }
 
             /**
+             * Create decorative plants around the office
+             */
+            createPlants() {
+                // Plant 1: Small potted plant on filing cabinet
+                this.createPottedPlant(2.1, 1.08, 1.5, 0.12, 'small');
+
+                // Plant 2: Medium floor plant near bookshelf
+                this.createPottedPlant(-1.8, 0.0, 0.8, 0.18, 'medium');
+
+                // Plant 3: Desk corner plant
+                this.createPottedPlant(-0.5, 0.85, -0.3, 0.1, 'small');
+
+                // Plant 4: Floor plant in corner
+                this.createPottedPlant(1.8, 0.0, -2.2, 0.2, 'large');
+            }
+
+            /**
+             * Create a single potted plant with terracotta pot
+             */
+            createPottedPlant(x, y, z, scale, size) {
+                const potHeight = size === 'small' ? 0.15 : size === 'medium' ? 0.25 : 0.3;
+                const potDiameter = size === 'small' ? 0.12 : size === 'medium' ? 0.18 : 0.22;
+
+                // Terracotta pot
+                const pot = BABYLON.MeshBuilder.CreateCylinder('pot', {
+                    height: potHeight,
+                    diameterTop: potDiameter * 1.1,
+                    diameterBottom: potDiameter * 0.85,
+                    tessellation: 16
+                }, this.scene);
+                pot.position.set(x, y + potHeight / 2, z);
+                pot.material = this.materials.terracotta;
+                this.meshes.push(pot);
+
+                // Rim decoration
+                const rim = BABYLON.MeshBuilder.CreateTorus('potRim', {
+                    diameter: potDiameter * 1.15,
+                    thickness: 0.008,
+                    tessellation: 24
+                }, this.scene);
+                rim.position.set(x, y + potHeight - 0.01, z);
+                rim.rotation.x = Math.PI / 2;
+                rim.material = this.materials.terracotta;
+                this.meshes.push(rim);
+
+                // Soil
+                const soil = BABYLON.MeshBuilder.CreateCylinder('soil', {
+                    height: 0.02,
+                    diameter: potDiameter * 1.05,
+                    tessellation: 16
+                }, this.scene);
+                soil.position.set(x, y + potHeight - 0.02, z);
+                soil.material = this.materials.soil;
+                this.meshes.push(soil);
+
+                // Plant foliage (multiple leaf clusters)
+                const numLeaves = size === 'small' ? 5 : size === 'medium' ? 8 : 12;
+                const leafHeight = size === 'small' ? 0.15 : size === 'medium' ? 0.25 : 0.35;
+
+                for (let i = 0; i < numLeaves; i++) {
+                    const angle = (i / numLeaves) * Math.PI * 2;
+                    const leafRadius = scale * 0.8;
+                    const heightVariation = Math.random() * 0.1;
+
+                    // Leaf stem
+                    const stem = BABYLON.MeshBuilder.CreateCylinder('stem', {
+                        height: leafHeight + heightVariation,
+                        diameter: 0.008,
+                        tessellation: 8
+                    }, this.scene);
+
+                    const stemX = x + Math.cos(angle) * (potDiameter * 0.2);
+                    const stemZ = z + Math.sin(angle) * (potDiameter * 0.2);
+                    stem.position.set(stemX, y + potHeight + (leafHeight + heightVariation) / 2, stemZ);
+                    stem.rotation.z = (Math.random() - 0.5) * 0.3;
+                    stem.rotation.x = (Math.random() - 0.5) * 0.3;
+
+                    const stemMat = new BABYLON.StandardMaterial('stemMat', this.scene);
+                    stemMat.diffuseColor = new BABYLON.Color3(0.25, 0.4, 0.2);
+                    stem.material = stemMat;
+                    this.meshes.push(stem);
+
+                    // Leaf
+                    const leaf = BABYLON.MeshBuilder.CreateSphere('leaf', {
+                        diameter: scale * 1.2,
+                        segments: 8
+                    }, this.scene);
+                    leaf.scaling.y = 0.4; // Flatten to leaf shape
+                    leaf.scaling.z = 1.5; // Elongate
+                    leaf.position.set(
+                        stemX + Math.cos(angle) * (leafRadius * 0.3),
+                        y + potHeight + leafHeight + heightVariation,
+                        stemZ + Math.sin(angle) * (leafRadius * 0.3)
+                    );
+                    leaf.rotation.y = angle;
+                    leaf.rotation.z = Math.PI / 6 + (Math.random() - 0.5) * 0.4;
+                    leaf.material = this.materials.foliage;
+                    this.meshes.push(leaf);
+                }
+            }
+
+            /**
              * Clean up resources
              */
             dispose() {
@@ -1702,32 +1901,48 @@
             }
 
             setupLighting() {
+                // Warm ambient light (cozy overall illumination)
                 const ambientLight = new BABYLON.HemisphericLight(
                     'ambientLight',
                     new BABYLON.Vector3(0, 1, 0),
                     this.scene
                 );
-                ambientLight.intensity = 0.9;
-                ambientLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
-                ambientLight.specular = new BABYLON.Color3(0.5, 0.5, 0.5);
+                ambientLight.intensity = 0.6;
+                ambientLight.diffuse = new BABYLON.Color3(1, 0.92, 0.82);  // Warmer tone
+                ambientLight.specular = new BABYLON.Color3(0.4, 0.35, 0.3);
+                ambientLight.groundColor = new BABYLON.Color3(0.3, 0.25, 0.2);  // Warm ground reflection
 
+                // Main directional light (warm sunlight through window)
                 const mainLight = new BABYLON.DirectionalLight(
                     'mainLight',
                     new BABYLON.Vector3(-1, -2, -1),
                     this.scene
                 );
                 mainLight.position = new BABYLON.Vector3(2, 3, 2);
-                mainLight.intensity = 1.2;
-                mainLight.diffuse = new BABYLON.Color3(1, 0.98, 0.92);
+                mainLight.intensity = 0.8;
+                mainLight.diffuse = new BABYLON.Color3(1, 0.88, 0.7);  // Golden hour lighting
 
-                const rimLight = new BABYLON.PointLight(
-                    'rimLight',
-                    new BABYLON.Vector3(-1, 2, 1),
+                // Warm fill light (bounced light effect)
+                const fillLight = new BABYLON.PointLight(
+                    'fillLight',
+                    new BABYLON.Vector3(1.5, 1.5, -1),
                     this.scene
                 );
-                rimLight.intensity = 0.3;
-                rimLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+                fillLight.intensity = 0.4;
+                fillLight.diffuse = new BABYLON.Color3(0.95, 0.8, 0.65);  // Warm fill
+                fillLight.range = 6;
 
+                // Rim light (warm backlight for depth)
+                const rimLight = new BABYLON.PointLight(
+                    'rimLight',
+                    new BABYLON.Vector3(-1.5, 2, 1.5),
+                    this.scene
+                );
+                rimLight.intensity = 0.35;
+                rimLight.diffuse = new BABYLON.Color3(1, 0.85, 0.6);  // Warm edge light
+                rimLight.range = 5;
+
+                // Desk lamp (warm spot light on table)
                 const deskLamp = new BABYLON.SpotLight(
                     'deskLamp',
                     new BABYLON.Vector3(0.5, 2, -0.3),
@@ -1736,8 +1951,20 @@
                     2,
                     this.scene
                 );
-                deskLamp.intensity = 0.5;
-                deskLamp.diffuse = new BABYLON.Color3(1, 0.9, 0.7);
+                deskLamp.intensity = 0.7;
+                deskLamp.diffuse = new BABYLON.Color3(1, 0.85, 0.55);  // Warm incandescent glow
+
+                // Window light (soft warm light from outside)
+                const windowLight = new BABYLON.SpotLight(
+                    'windowLight',
+                    new BABYLON.Vector3(-1.5, 2.5, 2.8),
+                    new BABYLON.Vector3(0.3, -0.5, -0.8),
+                    Math.PI / 2.5,
+                    3,
+                    this.scene
+                );
+                windowLight.intensity = 0.5;
+                windowLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);  // Soft daylight
             }
 
             startCameraIntroAnimation() {
