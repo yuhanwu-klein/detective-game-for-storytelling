@@ -145,7 +145,7 @@ export class OfficeEnvironment {
     }
 
     /**
-     * Create wooden floor with realistic texture
+     * Create wooden floor with brown wood material
      */
     createFloor() {
         const floor = BABYLON.MeshBuilder.CreateGround('floor', {
@@ -153,61 +153,11 @@ export class OfficeEnvironment {
             height: 6
         }, this.scene);
 
-        // Enhanced procedural wood texture
-        const floorTexture = new BABYLON.DynamicTexture('floorTexture', 512, this.scene);
-        const ctx = floorTexture.getContext();
-
-        // Base wood color
-        ctx.fillStyle = '#2D1810';
-        ctx.fillRect(0, 0, 512, 512);
-
-        // Create realistic wood planks
-        const plankHeight = 42;
-        for (let y = 0; y < 512; y += plankHeight) {
-            // Vary each plank's color slightly
-            const shade = 0.18 + Math.random() * 0.12;
-            const r = Math.floor(45 * shade);
-            const g = Math.floor(24 * shade);
-            const b = Math.floor(16 * shade);
-
-            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-            ctx.fillRect(0, y, 512, plankHeight - 2);
-
-            // Add wood grain detail
-            for (let x = 0; x < 512; x += 8) {
-                ctx.strokeStyle = `rgba(0, 0, 0, ${0.08 + Math.random() * 0.08})`;
-                ctx.lineWidth = 1 + Math.random();
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                const waveIntensity = 3 + Math.random() * 4;
-                ctx.bezierCurveTo(
-                    x + 128, y + Math.sin(x * 0.02) * waveIntensity,
-                    x + 256, y + Math.cos(x * 0.03) * waveIntensity,
-                    x + 384, y + plankHeight
-                );
-                ctx.stroke();
-            }
-
-            // Plank gaps
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-            ctx.fillRect(0, y + plankHeight - 2, 512, 2);
-
-            // Add knots randomly
-            if (Math.random() > 0.7) {
-                const knotX = Math.random() * 512;
-                const knotY = y + Math.random() * plankHeight;
-                ctx.fillStyle = `rgba(20, 10, 5, ${0.3 + Math.random() * 0.2})`;
-                ctx.beginPath();
-                ctx.ellipse(knotX, knotY, 8, 6, Math.random() * Math.PI, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
+        // Wood brown material
         const floorMaterial = new BABYLON.StandardMaterial('floorMaterial', this.scene);
-        floorMaterial.diffuseTexture = floorTexture;
-        floorMaterial.specularColor = new BABYLON.Color3(0.15, 0.12, 0.1);
-        floorMaterial.diffuseTexture.uScale = 2.5;
-        floorMaterial.diffuseTexture.vScale = 3;
+        floorMaterial.diffuseColor = new BABYLON.Color3(0.45, 0.30, 0.18);  // Medium brown wood
+        floorMaterial.specularColor = new BABYLON.Color3(0.2, 0.15, 0.1);
+        floorMaterial.specularPower = 32;
 
         floor.material = floorMaterial;
         floor.receiveShadows = true;
