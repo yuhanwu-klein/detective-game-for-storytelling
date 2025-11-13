@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detective Game - Phone Scene</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #1a1a1a;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        #ui-overlay h2 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        #ui-overlay p {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        #phone-status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .status-ringing {
+            background: rgba(255, 152, 0, 0.2) !important;
+            border-left-color: #FF9800 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <p>Loading scene...</p>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="ui-overlay">
+        <h2>🔍 Detective Game</h2>
+        <p><strong>Scene:</strong> Office Desk</p>
+        <p><strong>Controls:</strong></p>
+        <p>• Click/tap the phone to answer</p>
+        <p>• Mouse drag to rotate camera</p>
+        <p>• Scroll to zoom</p>
+
+        <div id="phone-status">
+            <strong>Phone Status:</strong> <span id="status-text">Idle</span>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

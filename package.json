@@ -1,0 +1,22 @@
+{
+  "name": "detective-game-for-storytelling",
+  "version": "1.0.0",
+  "description": "A detective game with 3D storytelling elements",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["game", "detective", "3d", "storytelling"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^6.0.0",
+    "@babylonjs/loaders": "^6.0.0"
+  }
+}
