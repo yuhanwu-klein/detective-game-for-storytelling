@@ -2,6 +2,7 @@ import * as BABYLON from '@babylonjs/core';
 import { AudioManager } from '../audio/AudioManager.js';
 import { PhoneObject } from '../entities/PhoneObject.js';
 import { TableObject } from '../entities/TableObject.js';
+import { OfficeEnvironment } from '../entities/OfficeEnvironment.js';
 
 /**
  * Main game manager that controls the scene and game logic
@@ -15,6 +16,10 @@ export class GameManager {
         this.audioManager = null;
         this.phoneObject = null;
         this.tableObject = null;
+        this.officeEnvironment = null;
+        this.initialCameraRadius = 2.5;
+        this.initialCameraAlpha = Math.PI / 2;
+        this.initialCameraBeta = Math.PI / 3;
     }
 
     /**
@@ -91,11 +96,8 @@ export class GameManager {
 
         this.updateLoadingStatus('Setting up environment...');
 
-        // Add ground
-        this.createGround();
-
-        // Add background/walls
-        this.createEnvironment();
+        // Create complete detective office environment
+        this.officeEnvironment = new OfficeEnvironment(this.scene);
 
         this.updateLoadingStatus('Starting game...');
 
@@ -171,47 +173,6 @@ export class GameManager {
         deskLamp.diffuse = new BABYLON.Color3(1, 0.9, 0.7);
     }
 
-    /**
-     * Create ground plane
-     */
-    createGround() {
-        const ground = BABYLON.MeshBuilder.CreateGround('ground', {
-            width: 10,
-            height: 10
-        }, this.scene);
-
-        const groundMaterial = new BABYLON.StandardMaterial('groundMaterial', this.scene);
-        groundMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.78, 0.82);
-        groundMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-
-        ground.material = groundMaterial;
-        ground.receiveShadows = true;
-    }
-
-    /**
-     * Create environment (walls, background)
-     */
-    createEnvironment() {
-        // Back wall
-        const backWall = BABYLON.MeshBuilder.CreatePlane('backWall', {
-            width: 10,
-            height: 5
-        }, this.scene);
-        backWall.position.z = 3;
-        backWall.position.y = 2.5;
-
-        const wallMaterial = new BABYLON.StandardMaterial('wallMaterial', this.scene);
-        wallMaterial.diffuseColor = new BABYLON.Color3(0.88, 0.90, 0.92);
-        wallMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-
-        backWall.material = wallMaterial;
-
-        // Add some atmosphere with fog
-        this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
-        this.scene.fogColor = new BABYLON.Color3(0.85, 0.88, 0.92);
-        this.scene.fogStart = 5.0;
-        this.scene.fogEnd = 10.0;
-    }
 
     /**
      * Update loading status text
@@ -246,6 +207,7 @@ export class GameManager {
     dispose() {
         if (this.phoneObject) this.phoneObject.dispose();
         if (this.tableObject) this.tableObject.dispose();
+        if (this.officeEnvironment) this.officeEnvironment.dispose();
         if (this.audioManager) this.audioManager.dispose();
         if (this.scene) this.scene.dispose();
         if (this.engine) this.engine.dispose();
