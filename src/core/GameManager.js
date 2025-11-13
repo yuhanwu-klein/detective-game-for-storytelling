@@ -34,7 +34,7 @@ export class GameManager {
 
         // Create scene
         this.scene = new BABYLON.Scene(this.engine);
-        this.scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.15, 1);
+        this.scene.clearColor = new BABYLON.Color4(0.85, 0.88, 0.92, 1);
 
         // Enable physics (optional, for future use)
         // this.scene.enablePhysics();
@@ -135,9 +135,9 @@ export class GameManager {
             new BABYLON.Vector3(0, 1, 0),
             this.scene
         );
-        ambientLight.intensity = 0.5;
-        ambientLight.diffuse = new BABYLON.Color3(1, 0.95, 0.9);
-        ambientLight.specular = new BABYLON.Color3(0.3, 0.3, 0.3);
+        ambientLight.intensity = 0.9;
+        ambientLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
+        ambientLight.specular = new BABYLON.Color3(0.5, 0.5, 0.5);
 
         // Main directional light (sun/key light)
         const mainLight = new BABYLON.DirectionalLight(
@@ -146,8 +146,8 @@ export class GameManager {
             this.scene
         );
         mainLight.position = new BABYLON.Vector3(2, 3, 2);
-        mainLight.intensity = 0.8;
-        mainLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);
+        mainLight.intensity = 1.2;
+        mainLight.diffuse = new BABYLON.Color3(1, 0.98, 0.92);
 
         // Rim light (backlight for depth)
         const rimLight = new BABYLON.PointLight(
@@ -181,8 +181,8 @@ export class GameManager {
         }, this.scene);
 
         const groundMaterial = new BABYLON.StandardMaterial('groundMaterial', this.scene);
-        groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.35);
-        groundMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        groundMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.78, 0.82);
+        groundMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 
         ground.material = groundMaterial;
         ground.receiveShadows = true;
@@ -201,16 +201,16 @@ export class GameManager {
         backWall.position.y = 2.5;
 
         const wallMaterial = new BABYLON.StandardMaterial('wallMaterial', this.scene);
-        wallMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.42, 0.45);
-        wallMaterial.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05);
+        wallMaterial.diffuseColor = new BABYLON.Color3(0.88, 0.90, 0.92);
+        wallMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
 
         backWall.material = wallMaterial;
 
         // Add some atmosphere with fog
         this.scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
-        this.scene.fogColor = new BABYLON.Color3(0.1, 0.1, 0.15);
-        this.scene.fogStart = 3.0;
-        this.scene.fogEnd = 8.0;
+        this.scene.fogColor = new BABYLON.Color3(0.85, 0.88, 0.92);
+        this.scene.fogStart = 5.0;
+        this.scene.fogEnd = 10.0;
     }
 
     /**
