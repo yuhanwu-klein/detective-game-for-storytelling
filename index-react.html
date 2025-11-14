@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detective Game - Ringing Telephone</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useEffect, useRef, useState } = React;
+
+        function RingingTelephone() {
+            const mountRef = useRef(null);
+            const [isRinging, setIsRinging] = useState(false);
+            const [showNotebook, setShowNotebook] = useState(false);
+            const [noteText, setNoteText] = useState('');
+            const sceneRef = useRef(null);
+
+            useEffect(() => {
+                if (!mountRef.current) return;
+
+                // Scene setup
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x4a5568);
+                scene.fog = new THREE.Fog(0x4a5568, 15, 40);
+
+                // Camera
+                const camera = new THREE.PerspectiveCamera(
+                    75,
+                    window.innerWidth / window.innerHeight,
+                    0.1,
+                    1000
+                );
+                camera.position.set(0, 3, 8);
+                camera.lookAt(0, 0, 0);
+
+                // Renderer
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                mountRef.current.appendChild(renderer.domElement);
+
+                // Lights - Office lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+
+                const spotLight = new THREE.SpotLight(0xffffee, 1.2);
+                spotLight.position.set(3, 7, 5);
+                spotLight.castShadow = true;
+                spotLight.shadow.mapSize.width = 2048;
+                spotLight.shadow.mapSize.height = 2048;
+                scene.add(spotLight);
+
+                const fillLight = new THREE.PointLight(0xaaaaff, 0.3);
+                fillLight.position.set(-5, 5, -5);
+                scene.add(fillLight);
+
+                // Floor
+                const floorGeometry = new THREE.PlaneGeometry(30, 30);
+                const floorMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x3a3a3a,
+                    roughness: 0.8,
+                    metalness: 0.1
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -3;
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                // Back wall
+                const backWallGeometry = new THREE.PlaneGeometry(30, 15);
+                const wallMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x6b7280,
+                    roughness: 0.9
+                });
+                const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+                backWall.position.set(0, 4.5, -10);
+                backWall.receiveShadow = true;
+                scene.add(backWall);
+
+                // Table
+                const tableGeometry = new THREE.BoxGeometry(8, 0.3, 6);
+                const tableMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8b4513,
+                    roughness: 0.7,
+                    metalness: 0.1
+                });
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+                table.position.y = -1;
+                table.receiveShadow = true;
+                table.castShadow = true;
+                scene.add(table);
+
+                // Phone Group
+                const phoneGroup = new THREE.Group();
+                phoneGroup.position.set(0, -0.7, 0);
+                phoneGroup.scale.set(0.6, 0.6, 0.6);
+                scene.add(phoneGroup);
+
+                // SMARTPHONE BODY
+                const phoneBodyGeometry = new THREE.BoxGeometry(1.2, 0.15, 2.4);
+                const phoneBodyMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.2,
+                    metalness: 0.8
+                });
+                const phoneBody = new THREE.Mesh(phoneBodyGeometry, phoneBodyMaterial);
+                phoneBody.castShadow = true;
+                phoneBody.receiveShadow = true;
+                phoneGroup.add(phoneBody);
+
+                // Screen
+                const screenGeometry = new THREE.BoxGeometry(1.1, 0.02, 2.3);
+                const screenMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x0a0a0a,
+                    roughness: 0.1,
+                    metalness: 0.9,
+                    emissive: 0x1a1a3a,
+                    emissiveIntensity: 0.3
+                });
+                const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+                screen.position.set(0, 0.085, 0);
+                phoneGroup.add(screen);
+
+                // Notch
+                const notchGeometry = new THREE.BoxGeometry(0.3, 0.03, 0.08);
+                const notchMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+                const notch = new THREE.Mesh(notchGeometry, notchMaterial);
+                notch.position.set(0, 0.09, -1.05);
+                phoneGroup.add(notch);
+
+                // Triple cameras on back
+                const cameraPositions = [
+                    [-0.35, -0.14, -1.0],
+                    [-0.25, -0.14, -0.85],
+                    [-0.45, -0.14, -0.85]
+                ];
+
+                cameraPositions.forEach((pos) => {
+                    const ringGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.02, 32);
+                    const ringMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x444444,
+                        roughness: 0.2,
+                        metalness: 0.9
+                    });
+                    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                    ring.rotation.x = Math.PI / 2;
+                    ring.position.set(...pos);
+                    phoneGroup.add(ring);
+                });
+
+                // Store screen reference
+                phoneGroup.userData.screen = screen;
+
+                // Office Chair
+                const chairBaseGeometry = new THREE.CylinderGeometry(0.7, 0.7, 0.12, 5);
+                const chairMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.6,
+                    metalness: 0.4
+                });
+                const chairBase = new THREE.Mesh(chairBaseGeometry, chairMaterial);
+                chairBase.position.set(-1, -2.5, -4);
+                chairBase.castShadow = true;
+                scene.add(chairBase);
+
+                const poleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1.3, 16);
+                const pole = new THREE.Mesh(poleGeometry, chairMaterial);
+                pole.position.set(-1, -1.9, -4);
+                pole.castShadow = true;
+                scene.add(pole);
+
+                const seatGeometry = new THREE.CylinderGeometry(0.75, 0.7, 0.25, 32);
+                const seatMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x2c3e50,
+                    roughness: 0.7
+                });
+                const seat = new THREE.Mesh(seatGeometry, seatMaterial);
+                seat.position.set(-1, -1.2, -4);
+                seat.castShadow = true;
+                scene.add(seat);
+
+                const backrestGeometry = new THREE.BoxGeometry(0.9, 1.2, 0.15);
+                const backrest = new THREE.Mesh(backrestGeometry, seatMaterial);
+                backrest.position.set(-1, -0.4, -4.9);
+                backrest.rotation.x = -0.3;
+                backrest.castShadow = true;
+                scene.add(backrest);
+
+                // Computer Monitor
+                const monitorScreenGeometry = new THREE.BoxGeometry(2, 1.2, 0.1);
+                const monitorScreenMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.3,
+                    metalness: 0.7
+                });
+                const monitorScreen = new THREE.Mesh(monitorScreenGeometry, monitorScreenMaterial);
+                monitorScreen.position.set(-2.5, 0, -1.5);
+                monitorScreen.rotation.y = Math.PI;
+                monitorScreen.castShadow = true;
+                scene.add(monitorScreen);
+
+                // Coffee cup
+                const cupGeometry = new THREE.CylinderGeometry(0.15, 0.12, 0.3, 16);
+                const cupMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+                const coffeeCup = new THREE.Mesh(cupGeometry, cupMaterial);
+                coffeeCup.position.set(2.5, -0.7, 0.5);
+                coffeeCup.castShadow = true;
+                scene.add(coffeeCup);
+
+                // Books on table
+                const bookColors = [0x8b0000, 0x006400, 0x00008b, 0x8b4513, 0x4b0082];
+                for (let i = 0; i < 5; i++) {
+                    const bookGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.05);
+                    const bookMaterial = new THREE.MeshStandardMaterial({
+                        color: bookColors[i],
+                        roughness: 0.8
+                    });
+                    const book = new THREE.Mesh(bookGeometry, bookMaterial);
+                    book.position.set(-3, -0.55 + i * 0.06, -1.5);
+                    book.rotation.y = 0.1 + i * 0.05;
+                    book.castShadow = true;
+                    scene.add(book);
+                }
+
+                // Stack of books lying flat
+                const flatBookColors = [0x2f4f4f, 0x556b2f, 0x8b4513];
+                for (let i = 0; i < 3; i++) {
+                    const flatBookGeometry = new THREE.BoxGeometry(0.7, 0.05, 0.9);
+                    const flatBookMaterial = new THREE.MeshStandardMaterial({
+                        color: flatBookColors[i],
+                        roughness: 0.8
+                    });
+                    const flatBook = new THREE.Mesh(flatBookGeometry, flatBookMaterial);
+                    flatBook.position.set(1.5, -0.82 + i * 0.06, -1.8);
+                    flatBook.rotation.y = -0.2;
+                    flatBook.castShadow = true;
+                    scene.add(flatBook);
+                }
+
+                // Pen holder on table
+                const penHolderGeometry = new THREE.CylinderGeometry(0.12, 0.1, 0.25, 16);
+                const penHolderMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x2c2c2c,
+                    roughness: 0.7
+                });
+                const penHolder = new THREE.Mesh(penHolderGeometry, penHolderMaterial);
+                penHolder.position.set(1.8, -0.72, -1.2);
+                penHolder.castShadow = true;
+                scene.add(penHolder);
+
+                // Pens in holder - neatly organized
+                const penColors = [0x0000ff, 0xff0000, 0x000000, 0x00ff00, 0xffa500];
+
+                penColors.forEach((color, index) => {
+                    const penGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.5, 8);
+                    const penMaterial = new THREE.MeshStandardMaterial({
+                        color: color,
+                        metalness: 0.5,
+                        roughness: 0.3
+                    });
+                    const pen = new THREE.Mesh(penGeometry, penMaterial);
+
+                    // Arrange pens in a circle inside the holder
+                    const angle = (index * Math.PI * 2) / penColors.length;
+                    const radius = 0.05;
+                    pen.position.set(
+                        1.8 + Math.cos(angle) * radius,
+                        -0.45,
+                        -1.2 + Math.sin(angle) * radius
+                    );
+                    pen.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.1;
+                    pen.castShadow = true;
+                    scene.add(pen);
+
+                    // Pen caps (top part)
+                    const capGeometry = new THREE.CylinderGeometry(0.02, 0.015, 0.08, 8);
+                    const capMaterial = new THREE.MeshStandardMaterial({
+                        color: color,
+                        metalness: 0.7,
+                        roughness: 0.2
+                    });
+                    const cap = new THREE.Mesh(capGeometry, capMaterial);
+                    cap.position.set(
+                        1.8 + Math.cos(angle) * radius,
+                        -0.2,
+                        -1.2 + Math.sin(angle) * radius
+                    );
+                    cap.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.1;
+                    scene.add(cap);
+                });
+
+                // Clue Board on wall
+                const clueBoardGeometry = new THREE.BoxGeometry(5, 3, 0.1);
+                const clueBoardMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8b7355,
+                    roughness: 0.9
+                });
+                const clueBoard = new THREE.Mesh(clueBoardGeometry, clueBoardMaterial);
+                clueBoard.position.set(-4, 4, -9.9);
+                scene.add(clueBoard);
+
+                // Cork texture on clue board
+                const corkGeometry = new THREE.PlaneGeometry(4.8, 2.8);
+                const corkMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xd4a574,
+                    roughness: 1
+                });
+                const cork = new THREE.Mesh(corkGeometry, corkMaterial);
+                cork.position.set(-4, 4, -9.85);
+                scene.add(cork);
+
+                // Evidence photos on clue board
+                const photoGeometry = new THREE.PlaneGeometry(0.8, 0.6);
+                const photoPositions = [
+                    [-5.5, 5, -9.8],
+                    [-4.3, 5, -9.8],
+                    [-3.1, 5, -9.8],
+                    [-5.5, 4, -9.8],
+                    [-4.3, 4, -9.8],
+                    [-3.1, 4, -9.8],
+                    [-5.5, 3, -9.8],
+                    [-4.3, 3, -9.8]
+                ];
+
+                photoPositions.forEach((pos, index) => {
+                    const photoMaterial = new THREE.MeshStandardMaterial({
+                        color: index % 2 === 0 ? 0xffffff : 0xf5f5dc,
+                        roughness: 0.6
+                    });
+                    const photo = new THREE.Mesh(photoGeometry, photoMaterial);
+                    photo.position.set(...pos);
+                    photo.rotation.z = (Math.random() - 0.5) * 0.1;
+                    scene.add(photo);
+
+                    // Pushpin on photo
+                    const pinGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8);
+                    const pinMaterial = new THREE.MeshStandardMaterial({
+                        color: index % 3 === 0 ? 0xff0000 : index % 3 === 1 ? 0xffff00 : 0x00ff00,
+                        metalness: 0.7,
+                        roughness: 0.3
+                    });
+                    const pin = new THREE.Mesh(pinGeometry, pinMaterial);
+                    pin.rotation.x = Math.PI / 2;
+                    pin.position.set(pos[0], pos[1] + 0.3, pos[2] + 0.02);
+                    scene.add(pin);
+                });
+
+                // Red strings connecting photos (like investigation connections)
+                const stringMaterial = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+                const connections = [
+                    [0, 1], [1, 2], [0, 3], [3, 4], [4, 5], [1, 4], [3, 6], [6, 7]
+                ];
+
+                connections.forEach(([from, to]) => {
+                    const points = [];
+                    points.push(new THREE.Vector3(
+                        photoPositions[from][0],
+                        photoPositions[from][1],
+                        photoPositions[from][2] + 0.01
+                    ));
+                    points.push(new THREE.Vector3(
+                        photoPositions[to][0],
+                        photoPositions[to][1],
+                        photoPositions[to][2] + 0.01
+                    ));
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, stringMaterial);
+                    scene.add(line);
+                });
+
+                // "SUSPECT" label on clue board
+                const labelGeometry = new THREE.PlaneGeometry(1.5, 0.3);
+                const labelMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xff0000,
+                    roughness: 0.5
+                });
+                const label = new THREE.Mesh(labelGeometry, labelMaterial);
+                label.position.set(-3.1, 3, -9.79);
+                scene.add(label);
+
+                // Wall Monitor
+                const wallMonitorFrameGeometry = new THREE.BoxGeometry(4, 2.5, 0.15);
+                const wallMonitorFrameMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1a1a1a,
+                    roughness: 0.4,
+                    metalness: 0.7
+                });
+                const wallMonitorFrame = new THREE.Mesh(wallMonitorFrameGeometry, wallMonitorFrameMaterial);
+                wallMonitorFrame.position.set(3, 2.5, -9.85);
+                scene.add(wallMonitorFrame);
+
+                const wallScreenGeometry = new THREE.PlaneGeometry(3.7, 2.2);
+                const wallScreenMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x0a1a2e,
+                    roughness: 0.1,
+                    emissive: 0x1a3a5a,
+                    emissiveIntensity: 0.4
+                });
+                const wallScreen = new THREE.Mesh(wallScreenGeometry, wallScreenMaterial);
+                wallScreen.position.set(3, 2.5, -9.78);
+                scene.add(wallScreen);
+
+                // Background Music
+                const backgroundAudio = new Audio('./background.mp3');
+                backgroundAudio.loop = true;
+                backgroundAudio.volume = 0.3;
+
+                // Audio
+                let audioContext = null;
+                const createRingSound = () => {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                };
+
+                // Animation variables
+                let time = 0;
+                let isAnimatingRing = false;
+                let ringInterval = null;
+                let cameraZoomProgress = 0;
+                const initialCameraPosition = { x: 0, y: 3, z: 8 };
+                const targetCameraPosition = { x: 0, y: 0.5, z: 3 };
+
+                // Animate
+                const animate = () => {
+                    requestAnimationFrame(animate);
+                    time += 0.016;
+
+                    if (isAnimatingRing) {
+                        // Phone vibrate
+                        const vibrateIntensity = 0.03;
+                        const vibrateSpeed = 30;
+                        phoneGroup.position.x = Math.sin(time * vibrateSpeed) * vibrateIntensity;
+                        phoneGroup.rotation.z = Math.sin(time * vibrateSpeed * 0.7) * 0.02;
+
+                        // Screen glow
+                        const glowIntensity = (Math.sin(time * 8) + 1) * 0.5;
+                        screen.material.emissive.setHex(0x4444ff);
+                        screen.material.emissiveIntensity = glowIntensity * 0.5;
+
+                        // Camera zoom
+                        if (cameraZoomProgress < 1) {
+                            cameraZoomProgress += 0.008;
+                            const eased = 1 - Math.pow(1 - cameraZoomProgress, 3);
+
+                            camera.position.x = initialCameraPosition.x + (targetCameraPosition.x - initialCameraPosition.x) * eased;
+                            camera.position.y = initialCameraPosition.y + (targetCameraPosition.y - initialCameraPosition.y) * eased;
+                            camera.position.z = initialCameraPosition.z + (targetCameraPosition.z - initialCameraPosition.z) * eased;
+                            camera.lookAt(phoneGroup.position);
+                        }
+                    } else {
+                        phoneGroup.position.x = 0;
+                        phoneGroup.rotation.z = 0;
+                        screen.material.emissive.setHex(0x1a1a3a);
+                        screen.material.emissiveIntensity = 0.3;
+
+                        if (cameraZoomProgress > 0) {
+                            cameraZoomProgress -= 0.01;
+                            const eased = 1 - Math.pow(1 - cameraZoomProgress, 3);
+
+                            camera.position.x = initialCameraPosition.x + (targetCameraPosition.x - initialCameraPosition.x) * eased;
+                            camera.position.y = initialCameraPosition.y + (targetCameraPosition.y - initialCameraPosition.y) * eased;
+                            camera.position.z = initialCameraPosition.z + (targetCameraPosition.z - initialCameraPosition.z) * eased;
+                            camera.lookAt(0, 0, 0);
+                        }
+                    }
+
+                    renderer.render(scene, camera);
+                };
+                animate();
+
+                // Ring control
+                const startRinging = () => {
+                    isAnimatingRing = true;
+                    cameraZoomProgress = 0;
+                    createRingSound();
+                    ringInterval = setInterval(createRingSound, 2000);
+
+                    // Play background music when phone starts ringing
+                    backgroundAudio.play().catch(e => console.log('Audio play failed:', e));
+                };
+
+                const stopRinging = () => {
+                    isAnimatingRing = false;
+                    if (ringInterval) {
+                        clearInterval(ringInterval);
+                        ringInterval = null;
+                    }
+                };
+
+                sceneRef.current = { startRinging, stopRinging };
+
+                // Phone click detection
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                const onPhoneClick = (event) => {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(phoneGroup.children, true);
+
+                    if (intersects.length > 0 && isAnimatingRing) {
+                        stopRinging();
+                        setShowNotebook(true);
+                        setIsRinging(false);
+                    }
+                };
+
+                renderer.domElement.addEventListener('click', onPhoneClick);
+
+                // Window resize
+                const handleResize = () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                };
+                window.addEventListener('resize', handleResize);
+
+                // Cleanup
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    renderer.domElement.removeEventListener('click', onPhoneClick);
+                    if (ringInterval) clearInterval(ringInterval);
+                    if (audioContext) audioContext.close();
+                    backgroundAudio.pause();
+                    backgroundAudio.src = '';
+                    if (mountRef.current && renderer.domElement) {
+                        mountRef.current.removeChild(renderer.domElement);
+                    }
+                    renderer.dispose();
+                };
+            }, []);
+
+            const handleToggleRing = () => {
+                if (!isRinging) {
+                    sceneRef.current?.startRinging();
+                    setIsRinging(true);
+                } else {
+                    sceneRef.current?.stopRinging();
+                    setIsRinging(false);
+                }
+            };
+
+            const handleCloseNotebook = () => {
+                setShowNotebook(false);
+                setIsRinging(false);
+                sceneRef.current?.stopRinging();
+            };
+
+            return (
+                <div className="relative w-full h-screen">
+                    <div ref={mountRef} className="w-full h-full" />
+
+                    {showNotebook && (
+                        <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+                            <div className="bg-amber-50 w-11/12 max-w-3xl h-5/6 rounded-lg shadow-2xl relative p-8"
+                                style={{
+                                    backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #cbd5e0 31px, #cbd5e0 32px)',
+                                    backgroundSize: '100% 32px'
+                                }}>
+
+                                <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-amber-800">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-4xl">📔</div>
+                                        <h2 className="text-3xl font-bold text-amber-900">Police Notes</h2>
+                                    </div>
+                                    <button
+                                        onClick={handleCloseNotebook}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+                                    >
+                                        ✕ Close
+                                    </button>
+                                </div>
+
+                                <div className="mb-4 text-sm text-gray-600 flex gap-4">
+                                    <span>📅 Date: {new Date().toLocaleDateString()}</span>
+                                    <span>🕐 Time: {new Date().toLocaleTimeString()}</span>
+                                    <span>📞 Incoming Call</span>
+                                </div>
+
+                                <textarea
+                                    value={noteText}
+                                    onChange={(e) => setNoteText(e.target.value)}
+                                    placeholder="Write your notes here...&#10;&#10;Case details, witness statements, important information..."
+                                    className="w-full h-4/5 bg-transparent text-lg text-gray-800 resize-none outline-none font-mono leading-8 p-2"
+                                    style={{ lineHeight: '32px' }}
+                                />
+
+                                <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-red-500 opacity-30"></div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
+                        <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                            📱 Incoming Call
+                        </h1>
+                        <p className="text-white text-lg drop-shadow-md">
+                            {isRinging ? "📲 Phone is ringing! Click the phone to answer..." : "Click to receive a call"}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleToggleRing}
+                        className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 px-8 py-4 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
+                            isRinging
+                                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                                : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
+                    >
+                        {isRinging ? '🔕 End Call' : '📲 Incoming Call'}
+                    </button>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<RingingTelephone />, document.getElementById('root'));
+    </script>
+
+    <style>
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .w-full { width: 100%; }
+        .h-screen { height: 100vh; }
+        .h-full { height: 100%; }
+        .w-11\\/12 { width: 91.666667%; }
+        .max-w-3xl { max-width: 48rem; }
+        .h-5\\/6 { height: 83.333333%; }
+        .h-4\\/5 { height: 80%; }
+        .bg-black { background-color: #000; }
+        .bg-opacity-70 { --tw-bg-opacity: 0.7; }
+        .bg-amber-50 { background-color: #fffbeb; }
+        .bg-red-600 { background-color: #dc2626; }
+        .bg-green-600 { background-color: #16a34a; }
+        .bg-red-700 { background-color: #b91c1c; }
+        .bg-green-700 { background-color: #15803d; }
+        .bg-transparent { background-color: transparent; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .z-50 { z-index: 50; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-full { border-radius: 9999px; }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .p-8 { padding: 2rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .px-8 { padding-left: 2rem; padding-right: 2rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .p-2 { padding: 0.5rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .pb-4 { padding-bottom: 1rem; }
+        .border-b-2 { border-bottom-width: 2px; }
+        .border-amber-800 { border-color: #92400e; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .text-amber-900 { color: #78350f; }
+        .text-white { color: #fff; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-800 { color: #1f2937; }
+        .hover\:bg-red-700:hover { background-color: #b91c1c; }
+        .hover\:bg-green-700:hover { background-color: #15803d; }
+        .transition-colors { transition-property: background-color, border-color, color, fill, stroke; }
+        .transition-all { transition-property: all; }
+        .duration-300 { transition-duration: 300ms; }
+        .resize-none { resize: none; }
+        .outline-none { outline: 2px solid transparent; outline-offset: 2px; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .leading-8 { line-height: 2rem; }
+        .drop-shadow-lg { filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.04)) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.1)); }
+        .drop-shadow-md { filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06)); }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .transform { transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)); }
+        .-translate-x-1\\/2 { --tw-translate-x: -50%; }
+        .top-8 { top: 2rem; }
+        .left-1\\/2 { left: 50%; }
+        .left-16 { left: 4rem; }
+        .top-0 { top: 0; }
+        .bottom-0 { bottom: 0; }
+        .bottom-12 { bottom: 3rem; }
+        .w-0\\.5 { width: 0.125rem; }
+        .opacity-30 { opacity: 0.3; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</body>
+</html>
