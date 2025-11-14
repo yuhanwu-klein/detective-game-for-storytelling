@@ -43,6 +43,7 @@
             const [showTutorial, setShowTutorial] = useState(true);
             const [discoveredClues, setDiscoveredClues] = useState([]);
             const [showCluePopup, setShowCluePopup] = useState(null);
+            const [showCaseSummary, setShowCaseSummary] = useState(false);
             const sceneRef = useRef(null);
             const audioRef = useRef(null);
             const voiceAudioRef = useRef(null);
@@ -1360,7 +1361,8 @@
 
                 // Show clue popup
                 setShowCluePopup(hotspot.clue);
-                setDiscoveredClues(prev => [...prev, hotspot.id]);
+                const newDiscoveredClues = [...discoveredClues, hotspot.id];
+                setDiscoveredClues(newDiscoveredClues);
                 setTimeout(() => setShowCluePopup(null), 4000);
 
                 // Add to evidence if it's a collectible type
@@ -1372,6 +1374,13 @@
                         description: hotspot.clue
                     };
                     setCollectedEvidence(prev => [...prev, newEvidence]);
+                }
+
+                // Check if all clues discovered
+                if (newDiscoveredClues.length === hotspots.length) {
+                    setTimeout(() => {
+                        setShowCaseSummary(true);
+                    }, 4500); // Show after current clue popup dismisses
                 }
             };
 
@@ -1818,6 +1827,148 @@
                                 <div>Clues Found: {discoveredClues.length} / {hotspots.length}</div>
                                 <div>Evidence Collected: {collectedEvidence.length}</div>
                             </div>
+
+                            {/* Case Summary Board - Shows when all clues found */}
+                            {showCaseSummary && (
+                                <div className="absolute inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
+                                    <div className="bg-gradient-to-br from-red-900 to-gray-900 w-11/12 max-w-5xl h-5/6 rounded-lg shadow-2xl p-8 overflow-auto border-4 border-red-600">
+                                        <div className="text-center mb-6">
+                                            <div className="text-6xl mb-3">🔍</div>
+                                            <h2 className="text-5xl font-bold text-red-400 mb-2">CASE SUMMARY</h2>
+                                            <p className="text-gray-300 text-xl">Investigation Complete - All Evidence Collected</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-6 mb-6">
+                                            {/* Victim Information */}
+                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-red-500">
+                                                <h3 className="text-2xl font-bold text-red-400 mb-3 flex items-center gap-2">
+                                                    <span>💀</span> Victim Analysis
+                                                </h3>
+                                                <ul className="text-gray-200 space-y-2">
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-red-400">•</span>
+                                                        <span><strong>Blood Type:</strong> O+ (Fresh, 2-3 hours old)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-red-400">•</span>
+                                                        <span><strong>Position:</strong> Arms outstretched (defensive posture)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-red-400">•</span>
+                                                        <span><strong>Attack:</strong> From behind (arterial spray pattern)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-red-400">•</span>
+                                                        <span><strong>Last Contact:</strong> 11:47 PM call to unknown number</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            {/* Weapons & Evidence */}
+                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-yellow-500">
+                                                <h3 className="text-2xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
+                                                    <span>🔪</span> Physical Evidence
+                                                </h3>
+                                                <ul className="text-gray-200 space-y-2">
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-yellow-400">•</span>
+                                                        <span><strong>Weapon:</strong> Kitchen knife, 6-inch blade</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-yellow-400">•</span>
+                                                        <span><strong>Firearm:</strong> 9mm bullet casing (2-3 feet range)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-yellow-400">•</span>
+                                                        <span><strong>Documents:</strong> Threatening letter dated yesterday</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-yellow-400">•</span>
+                                                        <span><strong>Phone:</strong> Victim's mobile device recovered</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            {/* Suspect Profile */}
+                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-orange-500">
+                                                <h3 className="text-2xl font-bold text-orange-400 mb-3 flex items-center gap-2">
+                                                    <span>👤</span> Suspect Profile
+                                                </h3>
+                                                <ul className="text-gray-200 space-y-2">
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-orange-400">•</span>
+                                                        <span><strong>Shoe:</strong> Size 11, Nike Air Max brand</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-orange-400">•</span>
+                                                        <span><strong>Handprint:</strong> Medium size, likely male</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-orange-400">•</span>
+                                                        <span><strong>Blood:</strong> Footprints show victim's blood</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-orange-400">•</span>
+                                                        <span><strong>Approach:</strong> Attacked from behind</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            {/* Scene Analysis */}
+                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-blue-500">
+                                                <h3 className="text-2xl font-bold text-blue-400 mb-3 flex items-center gap-2">
+                                                    <span>🏠</span> Crime Scene
+                                                </h3>
+                                                <ul className="text-gray-200 space-y-2">
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-blue-400">•</span>
+                                                        <span><strong>Location:</strong> Outside the city (residential)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-blue-400">•</span>
+                                                        <span><strong>Entry Point:</strong> Window unlocked (possible entry/exit)</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-blue-400">•</span>
+                                                        <span><strong>Time:</strong> Estimated 2-3 hours before discovery</span>
+                                                    </li>
+                                                    <li className="flex items-start gap-2">
+                                                        <span className="text-blue-400">•</span>
+                                                        <span><strong>Struggle:</strong> Evidence of violent confrontation</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-gradient-to-r from-red-900 to-orange-900 p-6 rounded-lg mb-6 border-2 border-red-500">
+                                            <h3 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                                                <span>⚖️</span> Conclusion
+                                            </h3>
+                                            <p className="text-gray-200 text-lg leading-relaxed">
+                                                <strong>PREMEDITATED MURDER:</strong> Evidence indicates suspect knew victim (threatening letter).
+                                                Attack was planned (unlocked window entry). Suspect is male, size 11 shoe, wearing Nike Air Max.
+                                                Used both knife and firearm. Victim attempted to defend but was attacked from behind.
+                                                Suspect fled scene on foot, leaving blood trail. Case ready for prosecution.
+                                            </p>
+                                        </div>
+
+                                        <div className="text-center">
+                                            <button
+                                                onClick={() => setShowCaseSummary(false)}
+                                                className="px-12 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 mr-4"
+                                            >
+                                                ✕ Close Summary
+                                            </button>
+                                            <button
+                                                onClick={() => setShowEvidenceBoard(true)}
+                                                className="px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
+                                            >
+                                                📋 View Evidence Board
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -2033,6 +2184,28 @@
         .hover\:opacity-90:hover { opacity: 0.9; }
         .hover\:scale-110:hover { --tw-scale-x: 1.1; --tw-scale-y: 1.1; transform: scale(var(--tw-scale-x), var(--tw-scale-y)); }
         .duration-200 { transition-duration: 200ms; }
+        .max-w-5xl { max-width: 64rem; }
+        .text-5xl { font-size: 3rem; line-height: 1; }
+        .from-red-900 { --tw-gradient-from: #7f1d1d; }
+        .to-gray-900 { --tw-gradient-to: #111827; }
+        .to-orange-900 { --tw-gradient-to: #7c2d12; }
+        .border-red-500 { border-color: #ef4444; }
+        .border-red-600 { border-color: #dc2626; }
+        .border-orange-500 { border-color: #f97316; }
+        .border-blue-500 { border-color: #3b82f6; }
+        .bg-red-900 { background-color: #7f1d1d; }
+        .text-red-400 { color: #f87171; }
+        .text-orange-400 { color: #fb923c; }
+        .text-blue-400 { color: #60a5fa; }
+        .hover\:bg-red-700:hover { background-color: #b91c1c; }
+        .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-to)); }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .items-start { align-items: flex-start; }
+        .p-5 { padding: 1.25rem; }
+        .p-6 { padding: 1.5rem; }
+        .mr-4 { margin-right: 1rem; }
+        .text-gray-200 { color: #e5e7eb; }
+        .bg-opacity-50 { --tw-bg-opacity: 0.5; background-color: rgba(0, 0, 0, var(--tw-bg-opacity)); }
     </style>
 </body>
 </html>
