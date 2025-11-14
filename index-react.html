@@ -33,6 +33,7 @@
             const [showNotebook, setShowNotebook] = useState(false);
             const [noteText, setNoteText] = useState('location: outside the city\nevent: murder\n\n');
             const [hasStarted, setHasStarted] = useState(false);
+            const [currentScene, setCurrentScene] = useState('office'); // 'office' or 'house'
             const sceneRef = useRef(null);
             const audioRef = useRef(null);
             const voiceAudioRef = useRef(null);
@@ -42,8 +43,15 @@
 
                 // Scene setup
                 const scene = new THREE.Scene();
-                scene.background = new THREE.Color(0x4a5568);
-                scene.fog = new THREE.Fog(0x4a5568, 15, 40);
+
+                if (currentScene === 'office') {
+                    scene.background = new THREE.Color(0x4a5568);
+                    scene.fog = new THREE.Fog(0x4a5568, 15, 40);
+                } else {
+                    // House scene - darker, more ominous
+                    scene.background = new THREE.Color(0x2a2a2a);
+                    scene.fog = new THREE.Fog(0x2a2a2a, 10, 30);
+                }
 
                 // Camera
                 const camera = new THREE.PerspectiveCamera(
@@ -62,20 +70,25 @@
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                 mountRef.current.appendChild(renderer.domElement);
 
-                // Lights - Office lighting
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-                scene.add(ambientLight);
+                // Scene-specific content
+                let phoneGroup = null; // Only for office scene
+                let screen = null; // Only for office scene
 
-                const spotLight = new THREE.SpotLight(0xffffee, 1.2);
-                spotLight.position.set(3, 7, 5);
-                spotLight.castShadow = true;
-                spotLight.shadow.mapSize.width = 2048;
-                spotLight.shadow.mapSize.height = 2048;
-                scene.add(spotLight);
+                if (currentScene === 'office') {
+                    // Lights - Office lighting
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                    scene.add(ambientLight);
 
-                const fillLight = new THREE.PointLight(0xaaaaff, 0.3);
-                fillLight.position.set(-5, 5, -5);
-                scene.add(fillLight);
+                    const spotLight = new THREE.SpotLight(0xffffee, 1.2);
+                    spotLight.position.set(3, 7, 5);
+                    spotLight.castShadow = true;
+                    spotLight.shadow.mapSize.width = 2048;
+                    spotLight.shadow.mapSize.height = 2048;
+                    scene.add(spotLight);
+
+                    const fillLight = new THREE.PointLight(0xaaaaff, 0.3);
+                    fillLight.position.set(-5, 5, -5);
+                    scene.add(fillLight);
 
                 // Floor
                 const floorGeometry = new THREE.PlaneGeometry(30, 30);
@@ -115,7 +128,7 @@
                 scene.add(table);
 
                 // Phone Group
-                const phoneGroup = new THREE.Group();
+                phoneGroup = new THREE.Group();
                 phoneGroup.position.set(0, -0.7, 0);
                 phoneGroup.scale.set(0.6, 0.6, 0.6);
                 scene.add(phoneGroup);
@@ -141,7 +154,7 @@
                     emissive: 0x1a1a3a,
                     emissiveIntensity: 0.3
                 });
-                const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+                screen = new THREE.Mesh(screenGeometry, screenMaterial);
                 screen.position.set(0, 0.085, 0);
                 phoneGroup.add(screen);
 
@@ -424,6 +437,271 @@
                 wallScreen.position.set(3, 2.5, -9.78);
                 scene.add(wallScreen);
 
+                } else if (currentScene === 'house') {
+                    // HOUSE CRIME SCENE - Dark and ominous
+
+                    // Dim ambient light
+                    const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+                    scene.add(ambientLight);
+
+                    // Flickering overhead light
+                    const overheadLight = new THREE.PointLight(0xffddaa, 0.8);
+                    overheadLight.position.set(0, 5, 0);
+                    overheadLight.castShadow = true;
+                    overheadLight.shadow.mapSize.width = 2048;
+                    overheadLight.shadow.mapSize.height = 2048;
+                    scene.add(overheadLight);
+
+                    // Crime scene light from window
+                    const windowLight = new THREE.SpotLight(0x8888ff, 0.4);
+                    windowLight.position.set(-8, 6, -5);
+                    windowLight.angle = Math.PI / 4;
+                    windowLight.castShadow = true;
+                    scene.add(windowLight);
+
+                    // Floor - wooden planks
+                    const floorGeometry = new THREE.PlaneGeometry(25, 25);
+                    const floorMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x4a3728,
+                        roughness: 0.9,
+                        metalness: 0.0
+                    });
+                    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                    floor.rotation.x = -Math.PI / 2;
+                    floor.position.y = -2;
+                    floor.receiveShadow = true;
+                    scene.add(floor);
+
+                    // BLOOD POOLS on floor
+                    const bloodGeometry1 = new THREE.CircleGeometry(1.2, 32);
+                    const bloodMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x8b0000,
+                        roughness: 0.4,
+                        metalness: 0.3,
+                        emissive: 0x330000,
+                        emissiveIntensity: 0.2
+                    });
+                    const bloodPool1 = new THREE.Mesh(bloodGeometry1, bloodMaterial);
+                    bloodPool1.rotation.x = -Math.PI / 2;
+                    bloodPool1.position.set(2, -1.99, 1);
+                    scene.add(bloodPool1);
+
+                    // Second blood pool
+                    const bloodGeometry2 = new THREE.CircleGeometry(0.8, 32);
+                    const bloodPool2 = new THREE.Mesh(bloodGeometry2, bloodMaterial);
+                    bloodPool2.rotation.x = -Math.PI / 2;
+                    bloodPool2.position.set(1, -1.99, -1);
+                    scene.add(bloodPool2);
+
+                    // Blood splatter (smaller pool)
+                    const bloodGeometry3 = new THREE.CircleGeometry(0.4, 32);
+                    const bloodPool3 = new THREE.Mesh(bloodGeometry3, bloodMaterial);
+                    bloodPool3.rotation.x = -Math.PI / 2;
+                    bloodPool3.position.set(3.5, -1.99, 0.5);
+                    scene.add(bloodPool3);
+
+                    // FOOTPRINTS - bloody shoe prints
+                    const footprintShape = new THREE.Shape();
+                    footprintShape.moveTo(0, 0);
+                    footprintShape.lineTo(0.3, 0);
+                    footprintShape.lineTo(0.35, 0.1);
+                    footprintShape.lineTo(0.35, 0.6);
+                    footprintShape.quadraticCurveTo(0.35, 0.8, 0.25, 0.85);
+                    footprintShape.quadraticCurveTo(0.15, 0.9, 0.05, 0.85);
+                    footprintShape.quadraticCurveTo(-0.05, 0.8, -0.05, 0.6);
+                    footprintShape.lineTo(-0.05, 0.1);
+                    footprintShape.lineTo(0, 0);
+
+                    const footprintGeometry = new THREE.ShapeGeometry(footprintShape);
+                    const footprintMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x660000,
+                        roughness: 0.6,
+                        metalness: 0.1
+                    });
+
+                    // Create footprint trail leaving the blood pool
+                    const footprintPositions = [
+                        { x: 2.5, z: 0.5, rotation: 0.2 },
+                        { x: 3.0, z: -0.3, rotation: -0.1 },
+                        { x: 3.5, z: -1.0, rotation: 0.15 },
+                        { x: 4.0, z: -1.8, rotation: -0.05 },
+                        { x: 4.3, z: -2.6, rotation: 0.1 },
+                        { x: 4.5, z: -3.5, rotation: -0.15 },
+                        { x: 4.6, z: -4.3, rotation: 0.0 }
+                    ];
+
+                    footprintPositions.forEach((pos, index) => {
+                        const footprint = new THREE.Mesh(footprintGeometry, footprintMaterial.clone());
+                        footprint.rotation.x = -Math.PI / 2;
+                        footprint.rotation.z = pos.rotation;
+                        footprint.position.set(pos.x, -1.98, pos.z);
+                        // Fade footprints as they get further
+                        footprint.material.opacity = 1 - (index * 0.12);
+                        footprint.material.transparent = true;
+                        scene.add(footprint);
+
+                        // Add right footprint slightly offset
+                        if (index > 0 && index % 2 === 0) {
+                            const footprintR = new THREE.Mesh(footprintGeometry, footprintMaterial.clone());
+                            footprintR.rotation.x = -Math.PI / 2;
+                            footprintR.rotation.z = pos.rotation + Math.PI;
+                            footprintR.position.set(pos.x - 0.4, -1.98, pos.z);
+                            footprintR.material.opacity = 1 - (index * 0.12);
+                            footprintR.material.transparent = true;
+                            scene.add(footprintR);
+                        }
+                    });
+
+                    // Walls
+                    const wallMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x5a5a4a,
+                        roughness: 0.95
+                    });
+
+                    // Back wall
+                    const backWallGeometry = new THREE.PlaneGeometry(25, 12);
+                    const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+                    backWall.position.set(0, 4, -10);
+                    backWall.receiveShadow = true;
+                    scene.add(backWall);
+
+                    // Left wall
+                    const leftWallGeometry = new THREE.PlaneGeometry(25, 12);
+                    const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+                    leftWall.rotation.y = Math.PI / 2;
+                    leftWall.position.set(-10, 4, 2.5);
+                    leftWall.receiveShadow = true;
+                    scene.add(leftWall);
+
+                    // Right wall
+                    const rightWallGeometry = new THREE.PlaneGeometry(25, 12);
+                    const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
+                    rightWall.rotation.y = -Math.PI / 2;
+                    rightWall.position.set(10, 4, 2.5);
+                    rightWall.receiveShadow = true;
+                    scene.add(rightWall);
+
+                    // Furniture - Overturned chair (sign of struggle)
+                    const chairSeatGeometry = new THREE.BoxGeometry(1.2, 0.2, 1.2);
+                    const furnitureMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x3a2a1a,
+                        roughness: 0.8
+                    });
+                    const chairSeat = new THREE.Mesh(chairSeatGeometry, furnitureMaterial);
+                    chairSeat.position.set(-2, -1.3, 2);
+                    chairSeat.rotation.z = Math.PI / 3; // Overturned
+                    chairSeat.rotation.y = 0.5;
+                    chairSeat.castShadow = true;
+                    scene.add(chairSeat);
+
+                    // Chair leg
+                    const chairLegGeometry = new THREE.CylinderGeometry(0.08, 0.08, 1, 8);
+                    for (let i = 0; i < 4; i++) {
+                        const leg = new THREE.Mesh(chairLegGeometry, furnitureMaterial);
+                        const angle = (i * Math.PI) / 2;
+                        leg.position.set(
+                            -2 + Math.cos(angle) * 0.5,
+                            -0.8,
+                            2 + Math.sin(angle) * 0.5
+                        );
+                        leg.rotation.z = Math.PI / 6 + (i * 0.1);
+                        leg.castShadow = true;
+                        scene.add(leg);
+                    }
+
+                    // Table
+                    const tableTopGeometry = new THREE.BoxGeometry(3, 0.15, 1.5);
+                    const tableTop = new THREE.Mesh(tableTopGeometry, furnitureMaterial);
+                    tableTop.position.set(-4, -0.5, -3);
+                    tableTop.castShadow = true;
+                    tableTop.receiveShadow = true;
+                    scene.add(tableTop);
+
+                    // Table legs
+                    const tableLegGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 8);
+                    const tableLegPositions = [
+                        [-5.3, -1.25, -3.6],
+                        [-5.3, -1.25, -2.4],
+                        [-2.7, -1.25, -3.6],
+                        [-2.7, -1.25, -2.4]
+                    ];
+                    tableLegPositions.forEach(pos => {
+                        const leg = new THREE.Mesh(tableLegGeometry, furnitureMaterial);
+                        leg.position.set(...pos);
+                        leg.castShadow = true;
+                        scene.add(leg);
+                    });
+
+                    // Broken lamp on floor (evidence of struggle)
+                    const lampBaseGeometry = new THREE.CylinderGeometry(0.2, 0.25, 0.3, 16);
+                    const lampMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x8b7355,
+                        roughness: 0.6
+                    });
+                    const lampBase = new THREE.Mesh(lampBaseGeometry, lampMaterial);
+                    lampBase.position.set(0, -1.85, 2.5);
+                    lampBase.rotation.z = Math.PI / 2;
+                    lampBase.castShadow = true;
+                    scene.add(lampBase);
+
+                    // Broken lampshade
+                    const lampshadeGeometry = new THREE.ConeGeometry(0.5, 0.6, 8);
+                    const lampshadeMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xccccaa,
+                        roughness: 0.9,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    const lampshade = new THREE.Mesh(lampshadeGeometry, lampshadeMaterial);
+                    lampshade.position.set(0.5, -1.7, 2.8);
+                    lampshade.rotation.z = Math.PI / 4;
+                    lampshade.castShadow = true;
+                    scene.add(lampshade);
+
+                    // Window frame
+                    const windowFrameGeometry = new THREE.BoxGeometry(3, 4, 0.2);
+                    const windowFrameMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x2a2a2a,
+                        roughness: 0.7
+                    });
+                    const windowFrame = new THREE.Mesh(windowFrameGeometry, windowFrameMaterial);
+                    windowFrame.position.set(-9.9, 2, -5);
+                    windowFrame.rotation.y = Math.PI / 2;
+                    scene.add(windowFrame);
+
+                    // Window glass (semi-transparent)
+                    const windowGlassGeometry = new THREE.PlaneGeometry(2.6, 3.6);
+                    const windowGlassMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x4466aa,
+                        transparent: true,
+                        opacity: 0.3,
+                        roughness: 0.1,
+                        metalness: 0.5
+                    });
+                    const windowGlass = new THREE.Mesh(windowGlassGeometry, windowGlassMaterial);
+                    windowGlass.position.set(-9.85, 2, -5);
+                    windowGlass.rotation.y = Math.PI / 2;
+                    scene.add(windowGlass);
+
+                    // Crime scene tape on floor
+                    const tapeGeometry = new THREE.BoxGeometry(8, 0.01, 0.3);
+                    const tapeMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xffff00,
+                        roughness: 0.3,
+                        emissive: 0xaaaa00,
+                        emissiveIntensity: 0.2
+                    });
+                    const tape1 = new THREE.Mesh(tapeGeometry, tapeMaterial);
+                    tape1.position.set(0, -1.95, 4);
+                    tape1.rotation.y = 0.1;
+                    scene.add(tape1);
+
+                    const tape2 = new THREE.Mesh(tapeGeometry, tapeMaterial);
+                    tape2.position.set(0, -1.95, -6);
+                    tape2.rotation.y = -0.15;
+                    scene.add(tape2);
+                }
+
                 // Background Music
                 if (!audioRef.current) {
                     audioRef.current = new Audio('./mixkit-echoes-188.mp3');
@@ -473,8 +751,8 @@
                     requestAnimationFrame(animate);
                     time += 0.016;
 
-                    if (isAnimatingRing) {
-                        // Phone vibrate
+                    if (isAnimatingRing && phoneGroup && screen) {
+                        // Phone vibrate (only in office scene)
                         const vibrateIntensity = 0.03;
                         const vibrateSpeed = 30;
                         phoneGroup.position.x = Math.sin(time * vibrateSpeed) * vibrateIntensity;
@@ -495,7 +773,7 @@
                             camera.position.z = initialCameraPosition.z + (targetCameraPosition.z - initialCameraPosition.z) * eased;
                             camera.lookAt(phoneGroup.position);
                         }
-                    } else {
+                    } else if (phoneGroup && screen) {
                         phoneGroup.position.x = 0;
                         phoneGroup.rotation.z = 0;
                         screen.material.emissive.setHex(0x1a1a3a);
@@ -539,6 +817,8 @@
                 const mouse = new THREE.Vector2();
 
                 const onPhoneClick = (event) => {
+                    if (!phoneGroup) return; // Only handle clicks in office scene
+
                     const rect = renderer.domElement.getBoundingClientRect();
                     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
                     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -588,7 +868,7 @@
                     }
                     renderer.dispose();
                 };
-            }, []);
+            }, [currentScene]);
 
             const handleToggleRing = () => {
                 if (!isRinging) {
@@ -604,6 +884,8 @@
                 setShowNotebook(false);
                 setIsRinging(false);
                 sceneRef.current?.stopRinging();
+                // Transition to house crime scene
+                setCurrentScene('house');
             };
 
             const handleStart = () => {
@@ -710,25 +992,40 @@
                         </div>
                     )}
 
-                    <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
-                        <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                            📱 Incoming Call
-                        </h1>
-                        <p className="text-white text-lg drop-shadow-md">
-                            {isRinging ? "📲 Phone is ringing! Click the phone to answer..." : "Click to receive a call"}
-                        </p>
-                    </div>
+                    {currentScene === 'office' && (
+                        <>
+                            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
+                                <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                                    📱 Incoming Call
+                                </h1>
+                                <p className="text-white text-lg drop-shadow-md">
+                                    {isRinging ? "📲 Phone is ringing! Click the phone to answer..." : "Click to receive a call"}
+                                </p>
+                            </div>
 
-                    <button
-                        onClick={handleToggleRing}
-                        className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 px-8 py-4 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
-                            isRinging
-                                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                                : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
-                    >
-                        {isRinging ? '🔕 End Call' : '📲 Incoming Call'}
-                    </button>
+                            <button
+                                onClick={handleToggleRing}
+                                className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 px-8 py-4 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
+                                    isRinging
+                                        ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                                        : 'bg-green-600 hover:bg-green-700 text-white'
+                                }`}
+                            >
+                                {isRinging ? '🔕 End Call' : '📲 Incoming Call'}
+                            </button>
+                        </>
+                    )}
+
+                    {currentScene === 'house' && (
+                        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
+                            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                                🏠 Crime Scene Investigation
+                            </h1>
+                            <p className="text-white text-lg drop-shadow-md">
+                                🔍 Examine the evidence: Blood pools and footprints detected
+                            </p>
+                        </div>
+                    )}
                 </div>
             );
         }
