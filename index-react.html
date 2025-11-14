@@ -35,6 +35,7 @@
             const [hasStarted, setHasStarted] = useState(false);
             const sceneRef = useRef(null);
             const audioRef = useRef(null);
+            const voiceAudioRef = useRef(null);
 
             useEffect(() => {
                 if (!mountRef.current) return;
@@ -431,6 +432,12 @@
                 }
                 const backgroundAudio = audioRef.current;
 
+                // Voice Audio (ElevenLabs)
+                if (!voiceAudioRef.current) {
+                    voiceAudioRef.current = new Audio('./ElevenLabs_Text_to_Speech_audio.mp3');
+                    voiceAudioRef.current.volume = 0.7;
+                }
+
                 // Audio
                 let audioContext = null;
                 const createRingSound = () => {
@@ -543,6 +550,14 @@
                         stopRinging();
                         setShowNotebook(true);
                         setIsRinging(false);
+
+                        // Play voice audio when phone is answered
+                        if (voiceAudioRef.current) {
+                            voiceAudioRef.current.currentTime = 0; // Reset to start
+                            voiceAudioRef.current.play().catch(e => {
+                                console.log('Voice audio play failed:', e);
+                            });
+                        }
                     }
                 };
 
@@ -564,6 +579,10 @@
                     if (audioContext) audioContext.close();
                     backgroundAudio.pause();
                     backgroundAudio.src = '';
+                    if (voiceAudioRef.current) {
+                        voiceAudioRef.current.pause();
+                        voiceAudioRef.current.src = '';
+                    }
                     if (mountRef.current && renderer.domElement) {
                         mountRef.current.removeChild(renderer.domElement);
                     }
