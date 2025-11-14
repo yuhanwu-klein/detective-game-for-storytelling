@@ -700,6 +700,330 @@
                     tape2.position.set(0, -1.95, -6);
                     tape2.rotation.y = -0.15;
                     scene.add(tape2);
+
+                    // BODY OUTLINE - chalk outline on floor
+                    const bodyOutlinePoints = [];
+                    // Create a human-like outline shape
+                    const outlineCoords = [
+                        [1.5, -1.97, 0.5], // head top
+                        [1.7, -1.97, 0.3], // head right
+                        [1.5, -1.97, -0.2], // neck
+                        [1.8, -1.97, -0.4], // right shoulder
+                        [2.0, -1.97, -0.8], // right arm
+                        [2.1, -1.97, -1.2], // right hand
+                        [2.0, -1.97, -0.8], // back to arm
+                        [1.8, -1.97, -0.4], // back to shoulder
+                        [1.7, -1.97, -1.3], // right torso
+                        [1.8, -1.97, -1.8], // right hip
+                        [1.9, -1.97, -2.5], // right leg
+                        [1.8, -1.97, -3.0], // right foot
+                        [1.6, -1.97, -2.9], // between feet
+                        [1.4, -1.97, -3.0], // left foot
+                        [1.3, -1.97, -2.5], // left leg
+                        [1.2, -1.97, -1.8], // left hip
+                        [1.3, -1.97, -1.3], // left torso
+                        [1.2, -1.97, -0.4], // left shoulder
+                        [1.0, -1.97, -0.8], // left arm
+                        [0.9, -1.97, -1.2], // left hand
+                        [1.0, -1.97, -0.8], // back to arm
+                        [1.2, -1.97, -0.4], // back to shoulder
+                        [1.5, -1.97, -0.2], // back to neck
+                        [1.3, -1.97, 0.3], // head left
+                        [1.5, -1.97, 0.5]  // back to head top
+                    ];
+
+                    for (let i = 0; i < outlineCoords.length - 1; i++) {
+                        const points = [];
+                        points.push(new THREE.Vector3(...outlineCoords[i]));
+                        points.push(new THREE.Vector3(...outlineCoords[i + 1]));
+                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        const material = new THREE.LineBasicMaterial({
+                            color: 0xffffff,
+                            linewidth: 3,
+                            opacity: 0.9,
+                            transparent: true
+                        });
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                    }
+
+                    // BLOOD SPLATTER on wall - arterial spray pattern
+                    const bloodSpatterMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x660000,
+                        roughness: 0.7,
+                        metalness: 0.1,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+
+                    // Create multiple blood droplets on back wall
+                    for (let i = 0; i < 25; i++) {
+                        const size = 0.05 + Math.random() * 0.15;
+                        const spatterGeometry = new THREE.CircleGeometry(size, 8);
+                        const spatter = new THREE.Mesh(spatterGeometry, bloodSpatterMaterial.clone());
+                        spatter.position.set(
+                            1 + (Math.random() - 0.5) * 3,
+                            -1 + Math.random() * 2,
+                            -9.98
+                        );
+                        // Add some drip effect
+                        if (Math.random() > 0.7) {
+                            spatter.scale.y = 1.5 + Math.random();
+                        }
+                        scene.add(spatter);
+                    }
+
+                    // Blood handprint on wall
+                    const handprintGeometry = new THREE.PlaneGeometry(0.3, 0.4);
+                    const handprint = new THREE.Mesh(handprintGeometry, bloodSpatterMaterial);
+                    handprint.position.set(-9.98, 0, 0);
+                    handprint.rotation.y = Math.PI / 2;
+                    handprint.rotation.z = -0.3;
+                    scene.add(handprint);
+
+                    // Finger marks
+                    for (let i = 0; i < 4; i++) {
+                        const fingerGeometry = new THREE.PlaneGeometry(0.05, 0.15);
+                        const finger = new THREE.Mesh(fingerGeometry, bloodSpatterMaterial);
+                        finger.position.set(-9.97, 0.1 - i * 0.05, 0.15 - i * 0.04);
+                        finger.rotation.y = Math.PI / 2;
+                        finger.rotation.z = -0.2 + i * 0.1;
+                        scene.add(finger);
+                    }
+
+                    // EVIDENCE MARKERS - yellow numbered cones
+                    const markerPositions = [
+                        { x: 2.2, z: 1.3, num: '1' },    // near main blood pool
+                        { x: 0.8, z: -1.2, num: '2' },   // near second blood pool
+                        { x: 0.3, z: 2.3, num: '3' },    // near broken lamp
+                        { x: 4.2, z: -2.0, num: '4' },   // near footprint
+                        { x: -2.5, z: 1.8, num: '5' }    // near overturned chair
+                    ];
+
+                    markerPositions.forEach(pos => {
+                        // Cone marker
+                        const coneGeometry = new THREE.ConeGeometry(0.12, 0.25, 4);
+                        const coneMaterial = new THREE.MeshStandardMaterial({
+                            color: 0xffff00,
+                            emissive: 0xaaaa00,
+                            emissiveIntensity: 0.3
+                        });
+                        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+                        cone.position.set(pos.x, -1.87, pos.z);
+                        scene.add(cone);
+
+                        // Number on cone (simulated with small plane)
+                        const numberGeometry = new THREE.PlaneGeometry(0.08, 0.08);
+                        const numberMaterial = new THREE.MeshStandardMaterial({
+                            color: 0x000000,
+                            emissive: 0x333333,
+                            emissiveIntensity: 0.5
+                        });
+                        const number = new THREE.Mesh(numberGeometry, numberMaterial);
+                        number.position.set(pos.x, -1.75, pos.z);
+                        number.rotation.x = -Math.PI / 2;
+                        scene.add(number);
+                    });
+
+                    // BROKEN GLASS scattered on floor
+                    const glassGeometry = new THREE.PlaneGeometry(0.1, 0.15);
+                    const glassMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xccccff,
+                        transparent: true,
+                        opacity: 0.6,
+                        roughness: 0.1,
+                        metalness: 0.8
+                    });
+
+                    for (let i = 0; i < 15; i++) {
+                        const glass = new THREE.Mesh(glassGeometry, glassMaterial.clone());
+                        glass.position.set(
+                            -0.3 + (Math.random() - 0.5) * 1.5,
+                            -1.98,
+                            2 + (Math.random() - 0.5) * 1.5
+                        );
+                        glass.rotation.x = -Math.PI / 2;
+                        glass.rotation.z = Math.random() * Math.PI;
+                        glass.scale.set(
+                            0.5 + Math.random() * 0.8,
+                            0.5 + Math.random() * 0.8,
+                            1
+                        );
+                        scene.add(glass);
+                    }
+
+                    // SCATTERED PAPERS on floor
+                    const paperGeometry = new THREE.PlaneGeometry(0.3, 0.4);
+                    const paperMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xf5f5dc,
+                        roughness: 0.9
+                    });
+
+                    const paperPositions = [
+                        { x: -1.5, z: 0.5, rot: 0.3 },
+                        { x: -0.8, z: 1.2, rot: -0.5 },
+                        { x: -1.2, z: -0.3, rot: 0.7 },
+                        { x: 0.5, z: 0.8, rot: -0.2 },
+                        { x: -2.0, z: 0, rot: 1.2 }
+                    ];
+
+                    paperPositions.forEach(pos => {
+                        const paper = new THREE.Mesh(paperGeometry, paperMaterial);
+                        paper.position.set(pos.x, -1.98, pos.z);
+                        paper.rotation.x = -Math.PI / 2 + (Math.random() - 0.5) * 0.1;
+                        paper.rotation.z = pos.rot;
+                        // Some papers have blood on them
+                        if (Math.random() > 0.6) {
+                            const bloodStain = new THREE.CircleGeometry(0.08, 16);
+                            const bloodStainMat = new THREE.MeshStandardMaterial({
+                                color: 0x8b0000,
+                                roughness: 0.8
+                            });
+                            const stain = new THREE.Mesh(bloodStain, bloodStainMat);
+                            stain.position.set(pos.x, -1.97, pos.z);
+                            stain.rotation.x = -Math.PI / 2;
+                            scene.add(stain);
+                        }
+                        scene.add(paper);
+                    });
+
+                    // WEAPON - knife on floor near body
+                    const knifeHandleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8);
+                    const knifeHandleMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x2a2a2a,
+                        roughness: 0.6
+                    });
+                    const knifeHandle = new THREE.Mesh(knifeHandleGeometry, knifeHandleMaterial);
+                    knifeHandle.position.set(0.5, -1.9, 0.8);
+                    knifeHandle.rotation.z = Math.PI / 2;
+                    knifeHandle.rotation.y = 0.5;
+                    knifeHandle.castShadow = true;
+                    scene.add(knifeHandle);
+
+                    // Knife blade
+                    const knifeBladeGeometry = new THREE.BoxGeometry(0.05, 0.3, 0.01);
+                    const knifeBladeMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x888888,
+                        metalness: 0.9,
+                        roughness: 0.2
+                    });
+                    const knifeBlade = new THREE.Mesh(knifeBladeGeometry, knifeBladeMaterial);
+                    knifeBlade.position.set(0.35, -1.9, 0.8);
+                    knifeBlade.rotation.z = Math.PI / 2;
+                    knifeBlade.rotation.y = 0.5;
+                    knifeBlade.castShadow = true;
+                    scene.add(knifeBlade);
+
+                    // Blood on knife blade
+                    const knifeBloodGeometry = new THREE.BoxGeometry(0.05, 0.15, 0.012);
+                    const knifeBloodMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x660000,
+                        roughness: 0.4
+                    });
+                    const knifeBlood = new THREE.Mesh(knifeBloodGeometry, knifeBloodMaterial);
+                    knifeBlood.position.set(0.38, -1.9, 0.8);
+                    knifeBlood.rotation.z = Math.PI / 2;
+                    knifeBlood.rotation.y = 0.5;
+                    scene.add(knifeBlood);
+
+                    // OVERTURNED PICTURE FRAME on floor
+                    const frameGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.05);
+                    const frameMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x3a2a1a,
+                        roughness: 0.6
+                    });
+                    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+                    frame.position.set(-0.8, -1.95, -0.5);
+                    frame.rotation.x = -Math.PI / 2 + 0.2;
+                    frame.rotation.z = 0.8;
+                    frame.castShadow = true;
+                    scene.add(frame);
+
+                    // Cracked glass on picture frame
+                    const frameGlassGeometry = new THREE.PlaneGeometry(0.45, 0.65);
+                    const frameGlassMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xcccccc,
+                        transparent: true,
+                        opacity: 0.4,
+                        roughness: 0.1
+                    });
+                    const frameGlass = new THREE.Mesh(frameGlassGeometry, frameGlassMaterial);
+                    frameGlass.position.set(-0.8, -1.92, -0.5);
+                    frameGlass.rotation.x = -Math.PI / 2 + 0.2;
+                    frameGlass.rotation.z = 0.8;
+                    scene.add(frameGlass);
+
+                    // CELL PHONE dropped on floor
+                    const phoneBodyGeometry2 = new THREE.BoxGeometry(0.15, 0.03, 0.3);
+                    const phoneBodyMaterial2 = new THREE.MeshStandardMaterial({
+                        color: 0x1a1a1a,
+                        roughness: 0.3,
+                        metalness: 0.7
+                    });
+                    const droppedPhone = new THREE.Mesh(phoneBodyGeometry2, phoneBodyMaterial2);
+                    droppedPhone.position.set(-1.8, -1.98, 0.3);
+                    droppedPhone.rotation.x = -Math.PI / 2;
+                    droppedPhone.rotation.z = 1.2;
+                    droppedPhone.castShadow = true;
+                    scene.add(droppedPhone);
+
+                    // Phone screen (cracked)
+                    const phoneScreenGeometry2 = new THREE.PlaneGeometry(0.14, 0.28);
+                    const phoneScreenMaterial2 = new THREE.MeshStandardMaterial({
+                        color: 0x0a0a0a,
+                        roughness: 0.2,
+                        metalness: 0.8
+                    });
+                    const phoneScreen2 = new THREE.Mesh(phoneScreenGeometry2, phoneScreenMaterial2);
+                    phoneScreen2.position.set(-1.8, -1.97, 0.3);
+                    phoneScreen2.rotation.x = -Math.PI / 2;
+                    phoneScreen2.rotation.z = 1.2;
+                    scene.add(phoneScreen2);
+
+                    // BULLET CASING on floor (additional evidence)
+                    const casingGeometry = new THREE.CylinderGeometry(0.02, 0.025, 0.05, 8);
+                    const casingMaterial = new THREE.MeshStandardMaterial({
+                        color: 0xb8860b,
+                        metalness: 0.9,
+                        roughness: 0.2
+                    });
+                    const casing = new THREE.Mesh(casingGeometry, casingMaterial);
+                    casing.position.set(-0.5, -1.98, -1.5);
+                    casing.rotation.z = Math.PI / 2;
+                    casing.castShadow = true;
+                    scene.add(casing);
+
+                    // BLOOD TRAIL - drag marks
+                    const dragGeometry = new THREE.PlaneGeometry(0.4, 2.5);
+                    const dragMaterial = new THREE.MeshStandardMaterial({
+                        color: 0x8b0000,
+                        roughness: 0.8,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    const dragMark = new THREE.Mesh(dragGeometry, dragMaterial);
+                    dragMark.position.set(1.2, -1.98, -0.5);
+                    dragMark.rotation.x = -Math.PI / 2;
+                    dragMark.rotation.z = 0.3;
+                    scene.add(dragMark);
+
+                    // Add some atmospheric dust particles (small floating specks)
+                    const dustGeometry = new THREE.SphereGeometry(0.01, 4, 4);
+                    const dustMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xcccccc,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+
+                    for (let i = 0; i < 30; i++) {
+                        const dust = new THREE.Mesh(dustGeometry, dustMaterial);
+                        dust.position.set(
+                            (Math.random() - 0.5) * 15,
+                            Math.random() * 5 - 1,
+                            (Math.random() - 0.5) * 15
+                        );
+                        scene.add(dust);
+                    }
                 }
 
                 // Background Music
