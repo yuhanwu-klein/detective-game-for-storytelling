@@ -1352,6 +1352,29 @@
                 setCurrentScene('house');
             };
 
+            // Handle direct hotspot clicks
+            const handleHotspotClick = (hotspot) => {
+                if (discoveredClues.includes(hotspot.id)) return;
+
+                console.log(`Hotspot clicked: ${hotspot.label}`);
+
+                // Show clue popup
+                setShowCluePopup(hotspot.clue);
+                setDiscoveredClues(prev => [...prev, hotspot.id]);
+                setTimeout(() => setShowCluePopup(null), 4000);
+
+                // Add to evidence if it's a collectible type
+                if (hotspot.tool === 'camera' || hotspot.tool === 'gloves') {
+                    const newEvidence = {
+                        id: Date.now(),
+                        type: hotspot.tool === 'camera' ? 'photo' : 'physical',
+                        name: hotspot.label,
+                        description: hotspot.clue
+                    };
+                    setCollectedEvidence(prev => [...prev, newEvidence]);
+                }
+            };
+
             const handleStart = () => {
                 // Play background music and enable sound
                 if (audioRef.current) {
@@ -1684,25 +1707,26 @@
                             {selectedTool && hotspots.filter(h => h.tool === selectedTool && !discoveredClues.includes(h.id)).map(hotspot => (
                                 <div
                                     key={hotspot.id}
-                                    className="absolute pointer-events-none"
+                                    className="absolute cursor-pointer"
                                     style={{
                                         left: `${hotspot.x}%`,
                                         top: `${hotspot.y}%`,
                                         transform: 'translate(-50%, -50%)',
                                         zIndex: 40
                                     }}
+                                    onClick={() => handleHotspotClick(hotspot)}
                                 >
-                                    <div className="w-16 h-16 bg-yellow-400 rounded-full opacity-70 animate-pulse flex items-center justify-center">
-                                        <div className="absolute inset-0 bg-yellow-300 rounded-full animate-ping"></div>
-                                        <div className="text-2xl relative z-10">{
+                                    <div className="w-16 h-16 bg-yellow-400 rounded-full opacity-70 animate-pulse flex items-center justify-center hover:opacity-90 hover:scale-110 transition-all duration-200">
+                                        <div className="absolute inset-0 bg-yellow-300 rounded-full animate-ping pointer-events-none"></div>
+                                        <div className="text-2xl relative z-10 pointer-events-none">{
                                             hotspot.tool === 'magnifier' ? '🔍' :
                                             hotspot.tool === 'flashlight' ? '🔦' :
                                             hotspot.tool === 'camera' ? '📸' :
                                             hotspot.tool === 'gloves' ? '🧤' : '🧪'
                                         }</div>
                                     </div>
-                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-90 px-3 py-2 rounded text-sm text-white whitespace-nowrap font-bold">
-                                        ↓ {hotspot.label}
+                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-90 px-3 py-2 rounded text-sm text-white whitespace-nowrap font-bold pointer-events-none">
+                                        👆 Click: {hotspot.label}
                                     </div>
                                 </div>
                             ))}
@@ -1768,10 +1792,11 @@
                                                 <span>Pro Tips:</span>
                                             </div>
                                             <ul className="text-gray-300 text-sm space-y-1">
-                                                <li>✓ Yellow pulsing circles show where to use your current tool</li>
+                                                <li>✓ Click directly on yellow pulsing circles to discover clues!</li>
+                                                <li>✓ Circles show exactly where evidence is located</li>
                                                 <li>✓ Each clue can only be discovered once</li>
                                                 <li>✓ Check the Evidence Board (📋) to review collected items</li>
-                                                <li>✓ Try different tools on different areas for complete investigation</li>
+                                                <li>✓ Try different tools to find all 10 clues!</li>
                                             </ul>
                                         </div>
 
@@ -2004,6 +2029,10 @@
         }
         .opacity-60 { opacity: 0.6; }
         .left-6 { left: 1.5rem; }
+        .cursor-pointer { cursor: pointer; }
+        .hover\:opacity-90:hover { opacity: 0.9; }
+        .hover\:scale-110:hover { --tw-scale-x: 1.1; --tw-scale-y: 1.1; transform: scale(var(--tw-scale-x), var(--tw-scale-y)); }
+        .duration-200 { transition-duration: 200ms; }
     </style>
 </body>
 </html>
