@@ -37,7 +37,7 @@ export class AudioManager {
         try {
             this.backgroundMusic = new BABYLON.Sound(
                 'backgroundMusic',
-                './mixkit-echoes-188.mp3',
+                './background.mp3',
                 this.scene,
                 () => {
                     console.log('Background music loaded successfully');
