@@ -627,7 +627,7 @@
 
                     {showNotebook && (
                         <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-                            <div className="bg-amber-50 w-11/12 max-w-3xl h-5/6 rounded-lg shadow-2xl relative p-8"
+                            <div className="bg-amber-50 w-11/12 max-w-6xl h-5/6 rounded-lg shadow-2xl relative p-8 overflow-auto"
                                 style={{
                                     backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #cbd5e0 31px, #cbd5e0 32px)',
                                     backgroundSize: '100% 32px'
@@ -652,13 +652,39 @@
                                     <span>📞 Incoming Call</span>
                                 </div>
 
-                                <textarea
-                                    value={noteText}
-                                    onChange={(e) => setNoteText(e.target.value)}
-                                    placeholder="Write your notes here...&#10;&#10;Case details, witness statements, important information..."
-                                    className="w-full h-4/5 bg-transparent text-lg text-gray-800 resize-none outline-none font-mono leading-8 p-2"
-                                    style={{ lineHeight: '32px' }}
-                                />
+                                <div className="flex gap-6">
+                                    <div className="flex-1">
+                                        <textarea
+                                            value={noteText}
+                                            onChange={(e) => setNoteText(e.target.value)}
+                                            placeholder="Write your notes here...&#10;&#10;Case details, witness statements, important information..."
+                                            className="w-full h-96 bg-transparent text-lg text-gray-800 resize-none outline-none font-mono leading-8 p-2"
+                                            style={{ lineHeight: '32px' }}
+                                        />
+                                    </div>
+
+                                    <div className="w-80">
+                                        <div className="bg-white p-3 rounded-lg shadow-lg">
+                                            <div className="mb-2 text-sm font-bold text-gray-700 flex items-center gap-2">
+                                                <span>📷</span>
+                                                <span>Evidence Photo</span>
+                                            </div>
+                                            <img
+                                                src="./WechatIMG488.jpg"
+                                                alt="Evidence"
+                                                className="w-full rounded border-2 border-gray-300"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                            <div className="evidence-placeholder hidden flex-col items-center justify-center p-8 bg-gray-100 rounded border-2 border-dashed border-gray-400">
+                                                <span className="text-4xl mb-2">📸</span>
+                                                <span className="text-sm text-gray-500 text-center">Place WechatIMG488.jpg in the project folder</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-red-500 opacity-30"></div>
                             </div>
@@ -700,10 +726,17 @@
         .h-screen { height: 100vh; }
         .h-full { height: 100%; }
         .w-11\\/12 { width: 91.666667%; }
+        .w-80 { width: 20rem; }
         .max-w-3xl { max-width: 48rem; }
+        .max-w-6xl { max-width: 72rem; }
         .h-5\\/6 { height: 83.333333%; }
         .h-4\\/5 { height: 80%; }
+        .h-96 { height: 24rem; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
         .bg-black { background-color: #000; }
+        .bg-white { background-color: #fff; }
+        .bg-gray-100 { background-color: #f3f4f6; }
         .bg-opacity-70 { --tw-bg-opacity: 0.7; }
         .bg-amber-50 { background-color: #fffbeb; }
         .bg-red-600 { background-color: #dc2626; }
@@ -715,12 +748,18 @@
         .items-center { align-items: center; }
         .justify-center { justify-content: center; }
         .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
         .gap-3 { gap: 0.75rem; }
         .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
         .z-50 { z-index: 50; }
+        .rounded { border-radius: 0.25rem; }
         .rounded-lg { border-radius: 0.5rem; }
         .rounded-full { border-radius: 9999px; }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
         .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
         .p-8 { padding: 2rem; }
         .px-4 { padding-left: 1rem; padding-right: 1rem; }
         .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
@@ -741,7 +780,9 @@
         .font-bold { font-weight: 700; }
         .text-amber-900 { color: #78350f; }
         .text-white { color: #fff; }
+        .text-gray-500 { color: #6b7280; }
         .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
         .text-gray-800 { color: #1f2937; }
         .hover\:bg-red-700:hover { background-color: #b91c1c; }
         .hover\:bg-green-700:hover { background-color: #15803d; }
@@ -766,6 +807,12 @@
         .w-0\\.5 { width: 0.125rem; }
         .opacity-30 { opacity: 0.3; }
         .bg-opacity-90 { --tw-bg-opacity: 0.9; background-color: rgba(0, 0, 0, var(--tw-bg-opacity)); }
+        .border-2 { border-width: 2px; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .border-gray-400 { border-color: #9ca3af; }
+        .border-dashed { border-style: dashed; }
+        .overflow-auto { overflow: auto; }
+        .hidden { display: none; }
         .text-5xl { font-size: 3rem; line-height: 1; }
         .text-2xl { font-size: 1.5rem; line-height: 2rem; }
         .text-gray-300 { color: #d1d5db; }
