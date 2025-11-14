@@ -47,18 +47,18 @@
             const audioRef = useRef(null);
             const voiceAudioRef = useRef(null);
 
-            // Define interactive hotspots with clues
+            // Define interactive hotspots with clues (adjusted positions for better alignment)
             const hotspots = [
-                { id: 'blood1', x: 50, y: 60, label: 'Blood Pool', tool: 'magnifier', clue: '🔬 Type O+ blood detected. Fresh, approximately 2-3 hours old.' },
-                { id: 'footprint', x: 70, y: 55, label: 'Footprint', tool: 'magnifier', clue: '👟 Size 11 shoe print. Brand: Nike Air Max. Traces of victim\'s blood.' },
-                { id: 'knife', x: 45, y: 58, label: 'Weapon', tool: 'camera', clue: '📸 Murder weapon photographed. Kitchen knife with 6-inch blade.' },
-                { id: 'phone', x: 35, y: 57, label: 'Phone', tool: 'gloves', clue: '📱 Victim\'s phone collected. Last call: 11:47 PM to unknown number.' },
-                { id: 'bodyoutline', x: 52, y: 45, label: 'Body Outline', tool: 'camera', clue: '📸 Victim position documented. Arms outstretched, suggesting defensive posture.' },
-                { id: 'papers', x: 38, y: 56, label: 'Documents', tool: 'gloves', clue: '📄 Scattered documents collected. Contains threatening letter dated yesterday.' },
-                { id: 'window', x: 15, y: 50, label: 'Window', tool: 'flashlight', clue: '🔦 Window unlocked! Possible entry/exit point for suspect.' },
-                { id: 'wallblood', x: 50, y: 35, label: 'Blood Splatter', tool: 'magnifier', clue: '🔬 Arterial spray pattern. Attack occurred from behind victim.' },
-                { id: 'casing', x: 42, y: 48, label: 'Bullet Casing', tool: 'gloves', clue: '🔫 9mm bullet casing. Fired from close range (2-3 feet).' },
-                { id: 'handprint', x: 10, y: 50, label: 'Handprint', tool: 'flashlight', clue: '🔦 Bloody handprint revealed! Medium size, likely male suspect.' }
+                { id: 'blood1', x: 60, y: 64, label: 'Blood Pool', tool: 'magnifier', clue: '🔬 Type O+ blood detected. Fresh, approximately 2-3 hours old.' },
+                { id: 'footprint', x: 72, y: 60, label: 'Footprint', tool: 'magnifier', clue: '👟 Size 11 shoe print. Brand: Nike Air Max. Traces of victim\'s blood.' },
+                { id: 'knife', x: 48, y: 62, label: 'Weapon', tool: 'camera', clue: '📸 Murder weapon photographed. Kitchen knife with 6-inch blade.' },
+                { id: 'phone', x: 32, y: 62, label: 'Phone', tool: 'gloves', clue: '📱 Victim\'s phone collected. Last call: 11:47 PM to unknown number.' },
+                { id: 'bodyoutline', x: 56, y: 58, label: 'Body Outline', tool: 'camera', clue: '📸 Victim position documented. Arms outstretched, suggesting defensive posture.' },
+                { id: 'papers', x: 40, y: 60, label: 'Documents', tool: 'gloves', clue: '📄 Scattered documents collected. Contains threatening letter dated yesterday.' },
+                { id: 'window', x: 15, y: 52, label: 'Window', tool: 'flashlight', clue: '🔦 Window unlocked! Possible entry/exit point for suspect.' },
+                { id: 'wallblood', x: 52, y: 40, label: 'Blood Splatter', tool: 'magnifier', clue: '🔬 Arterial spray pattern. Attack occurred from behind victim.' },
+                { id: 'casing', x: 46, y: 58, label: 'Bullet Casing', tool: 'gloves', clue: '🔫 9mm bullet casing. Fired from close range (2-3 feet).' },
+                { id: 'handprint', x: 10, y: 52, label: 'Handprint', tool: 'flashlight', clue: '🔦 Bloody handprint revealed! Medium size, likely male suspect.' }
             ];
 
             useEffect(() => {
@@ -1202,15 +1202,26 @@
 
                     // Check if click is near any hotspot
                     let foundHotspot = null;
+                    let closestDistance = Infinity;
+
+                    console.log(`Click at: ${clickXPercent.toFixed(1)}%, ${clickYPercent.toFixed(1)}%`);
+
                     for (const hotspot of hotspots) {
                         const distance = Math.sqrt(
                             Math.pow(clickXPercent - hotspot.x, 2) +
                             Math.pow(clickYPercent - hotspot.y, 2)
                         );
-                        if (distance < 8) { // Within 8% radius
+
+                        console.log(`  ${hotspot.label}: distance = ${distance.toFixed(1)}% (at ${hotspot.x}%, ${hotspot.y}%)`);
+
+                        if (distance < 15 && distance < closestDistance) { // Within 15% radius (increased from 8%)
                             foundHotspot = hotspot;
-                            break;
+                            closestDistance = distance;
                         }
+                    }
+
+                    if (foundHotspot) {
+                        console.log(`✓ Found hotspot: ${foundHotspot.label} (${closestDistance.toFixed(1)}% away)`);
                     }
 
                     // Handle different tool interactions
@@ -1677,14 +1688,21 @@
                                     style={{
                                         left: `${hotspot.x}%`,
                                         top: `${hotspot.y}%`,
-                                        transform: 'translate(-50%, -50%)'
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: 40
                                     }}
                                 >
-                                    <div className="w-8 h-8 bg-yellow-400 rounded-full opacity-60 animate-pulse">
+                                    <div className="w-16 h-16 bg-yellow-400 rounded-full opacity-70 animate-pulse flex items-center justify-center">
                                         <div className="absolute inset-0 bg-yellow-300 rounded-full animate-ping"></div>
+                                        <div className="text-2xl relative z-10">{
+                                            hotspot.tool === 'magnifier' ? '🔍' :
+                                            hotspot.tool === 'flashlight' ? '🔦' :
+                                            hotspot.tool === 'camera' ? '📸' :
+                                            hotspot.tool === 'gloves' ? '🧤' : '🧪'
+                                        }</div>
                                     </div>
-                                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 px-2 py-1 rounded text-xs text-white whitespace-nowrap">
-                                        {hotspot.label}
+                                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-90 px-3 py-2 rounded text-sm text-white whitespace-nowrap font-bold">
+                                        ↓ {hotspot.label}
                                     </div>
                                 </div>
                             ))}
@@ -1954,7 +1972,13 @@
         .text-6xl { font-size: 3.75rem; line-height: 1; }
         .w-8 { width: 2rem; }
         .h-8 { height: 2rem; }
+        .w-16 { width: 4rem; }
+        .h-16 { height: 4rem; }
         .-top-8 { top: -2rem; }
+        .-top-10 { top: -2.5rem; }
+        .z-10 { z-index: 10; }
+        .z-40 { z-index: 40; }
+        .opacity-70 { opacity: 0.7; }
         .max-w-3xl { max-width: 48rem; }
         .max-w-2xl { max-width: 42rem; }
         .border-yellow-500 { border-color: #eab308; }
