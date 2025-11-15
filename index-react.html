@@ -44,9 +44,19 @@
             const [discoveredClues, setDiscoveredClues] = useState([]);
             const [showCluePopup, setShowCluePopup] = useState(null);
             const [showCaseSummary, setShowCaseSummary] = useState(false);
+            const [selectedSuspect, setSelectedSuspect] = useState(null);
+            const [showResult, setShowResult] = useState(false);
             const sceneRef = useRef(null);
             const audioRef = useRef(null);
             const voiceAudioRef = useRef(null);
+
+            // Suspect profiles
+            const suspects = [
+                { id: 1, name: 'Marcus Chen', age: 34, shoe: 'Size 11 Nike Air Max', details: 'Former business partner. Had threatening argument yesterday.', isGuilty: true },
+                { id: 2, name: 'Sarah Miller', age: 28, shoe: 'Size 7 Adidas', details: 'Ex-girlfriend. Claims she was at home during incident.', isGuilty: false },
+                { id: 3, name: 'Robert Davis', age: 45, shoe: 'Size 10 Reebok', details: 'Neighbor. Heard arguing but saw nothing suspicious.', isGuilty: false },
+                { id: 4, name: 'James Wilson', age: 52, shoe: 'Size 12 Converse', details: 'Victim\'s landlord. Had financial disputes recently.', isGuilty: false }
+            ];
 
             // Define interactive hotspots with clues (adjusted positions for better alignment)
             const hotspots = [
@@ -1831,141 +1841,132 @@
                             {/* Case Summary Board - Shows when all clues found */}
                             {showCaseSummary && (
                                 <div className="absolute inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
-                                    <div className="bg-gradient-to-br from-red-900 to-gray-900 w-11/12 max-w-5xl h-5/6 rounded-lg shadow-2xl p-8 overflow-auto border-4 border-red-600">
+                                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 w-11/12 max-w-6xl rounded-lg shadow-2xl p-8 overflow-auto border-4 border-yellow-500">
                                         <div className="text-center mb-6">
                                             <div className="text-6xl mb-3">🔍</div>
-                                            <h2 className="text-5xl font-bold text-red-400 mb-2">CASE SUMMARY</h2>
-                                            <p className="text-gray-300 text-xl">Investigation Complete - All Evidence Collected</p>
+                                            <h2 className="text-5xl font-bold text-yellow-400 mb-2">CASE SUMMARY</h2>
+                                            <p className="text-gray-300 text-xl">All Evidence Collected - Identify the Suspect</p>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-6 mb-6">
-                                            {/* Victim Information */}
-                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-red-500">
-                                                <h3 className="text-2xl font-bold text-red-400 mb-3 flex items-center gap-2">
-                                                    <span>💀</span> Victim Analysis
-                                                </h3>
-                                                <ul className="text-gray-200 space-y-2">
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-red-400">•</span>
-                                                        <span><strong>Blood Type:</strong> O+ (Fresh, 2-3 hours old)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-red-400">•</span>
-                                                        <span><strong>Position:</strong> Arms outstretched (defensive posture)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-red-400">•</span>
-                                                        <span><strong>Attack:</strong> From behind (arterial spray pattern)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-red-400">•</span>
-                                                        <span><strong>Last Contact:</strong> 11:47 PM call to unknown number</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                        {!showResult ? (
+                                            <>
+                                                {/* Key Evidence Summary */}
+                                                <div className="bg-black bg-opacity-50 p-6 rounded-lg mb-6 border-2 border-yellow-500">
+                                                    <h3 className="text-2xl font-bold text-yellow-400 mb-4 text-center">📋 Key Evidence</h3>
+                                                    <div className="grid grid-cols-3 gap-4 text-gray-200">
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">👟</div>
+                                                            <div className="font-bold">Footprint</div>
+                                                            <div className="text-sm">Size 11 Nike Air Max</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">🖐️</div>
+                                                            <div className="font-bold">Handprint</div>
+                                                            <div className="text-sm">Medium, likely male</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">📄</div>
+                                                            <div className="font-bold">Letter</div>
+                                                            <div className="text-sm">Threatening, yesterday</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">🔪</div>
+                                                            <div className="font-bold">Weapon</div>
+                                                            <div className="text-sm">Kitchen knife</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">🔫</div>
+                                                            <div className="font-bold">Bullet</div>
+                                                            <div className="text-sm">9mm casing</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="text-3xl mb-2">🪟</div>
+                                                            <div className="font-bold">Entry</div>
+                                                            <div className="text-sm">Unlocked window</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                            {/* Weapons & Evidence */}
-                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-yellow-500">
-                                                <h3 className="text-2xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
-                                                    <span>🔪</span> Physical Evidence
-                                                </h3>
-                                                <ul className="text-gray-200 space-y-2">
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-yellow-400">•</span>
-                                                        <span><strong>Weapon:</strong> Kitchen knife, 6-inch blade</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-yellow-400">•</span>
-                                                        <span><strong>Firearm:</strong> 9mm bullet casing (2-3 feet range)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-yellow-400">•</span>
-                                                        <span><strong>Documents:</strong> Threatening letter dated yesterday</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-yellow-400">•</span>
-                                                        <span><strong>Phone:</strong> Victim's mobile device recovered</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                                {/* Suspect Selection */}
+                                                <h3 className="text-3xl font-bold text-white mb-4 text-center">👤 Select the Suspect</h3>
+                                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                                    {suspects.map(suspect => (
+                                                        <button
+                                                            key={suspect.id}
+                                                            onClick={() => {
+                                                                setSelectedSuspect(suspect);
+                                                                setShowResult(true);
+                                                            }}
+                                                            className="bg-gray-800 hover:bg-gray-700 p-6 rounded-lg border-2 border-gray-600 hover:border-yellow-500 transition-all duration-300 transform hover:scale-105 text-left"
+                                                        >
+                                                            <div className="text-4xl mb-2">👤</div>
+                                                            <h4 className="text-2xl font-bold text-white mb-2">{suspect.name}</h4>
+                                                            <div className="text-gray-300 mb-2">
+                                                                <span className="font-bold">Age:</span> {suspect.age} |
+                                                                <span className="font-bold"> Shoe:</span> {suspect.shoe}
+                                                            </div>
+                                                            <p className="text-gray-400 text-sm">{suspect.details}</p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                {/* Result Display */}
+                                                {selectedSuspect.isGuilty ? (
+                                                    <div className="bg-green-900 bg-opacity-50 p-8 rounded-lg border-4 border-green-500 mb-6">
+                                                        <div className="text-center">
+                                                            <div className="text-8xl mb-4">✅</div>
+                                                            <h3 className="text-4xl font-bold text-green-400 mb-4">CORRECT!</h3>
+                                                            <p className="text-gray-200 text-xl leading-relaxed">
+                                                                <strong>{selectedSuspect.name}</strong> is the murderer!
+                                                            </p>
+                                                            <p className="text-gray-300 mt-4 text-lg">
+                                                                Evidence matches: <strong>Size 11 Nike Air Max</strong> footprints,
+                                                                <strong> threatening letter</strong> from yesterday, and
+                                                                <strong> male handprint</strong>. He knew the victim and entered through the unlocked window.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-red-900 bg-opacity-50 p-8 rounded-lg border-4 border-red-500 mb-6">
+                                                        <div className="text-center">
+                                                            <div className="text-8xl mb-4">❌</div>
+                                                            <h3 className="text-4xl font-bold text-red-400 mb-4">INCORRECT</h3>
+                                                            <p className="text-gray-200 text-xl leading-relaxed">
+                                                                <strong>{selectedSuspect.name}</strong> is not the murderer.
+                                                            </p>
+                                                            <p className="text-gray-300 mt-4 text-lg">
+                                                                The footprints show <strong>Size 11 Nike Air Max</strong>, but this suspect wears <strong>{selectedSuspect.shoe}</strong>.
+                                                                Review the evidence and try again!
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
 
-                                            {/* Suspect Profile */}
-                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-orange-500">
-                                                <h3 className="text-2xl font-bold text-orange-400 mb-3 flex items-center gap-2">
-                                                    <span>👤</span> Suspect Profile
-                                                </h3>
-                                                <ul className="text-gray-200 space-y-2">
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-orange-400">•</span>
-                                                        <span><strong>Shoe:</strong> Size 11, Nike Air Max brand</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-orange-400">•</span>
-                                                        <span><strong>Handprint:</strong> Medium size, likely male</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-orange-400">•</span>
-                                                        <span><strong>Blood:</strong> Footprints show victim's blood</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-orange-400">•</span>
-                                                        <span><strong>Approach:</strong> Attacked from behind</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-
-                                            {/* Scene Analysis */}
-                                            <div className="bg-black bg-opacity-50 p-5 rounded-lg border-2 border-blue-500">
-                                                <h3 className="text-2xl font-bold text-blue-400 mb-3 flex items-center gap-2">
-                                                    <span>🏠</span> Crime Scene
-                                                </h3>
-                                                <ul className="text-gray-200 space-y-2">
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400">•</span>
-                                                        <span><strong>Location:</strong> Outside the city (residential)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400">•</span>
-                                                        <span><strong>Entry Point:</strong> Window unlocked (possible entry/exit)</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400">•</span>
-                                                        <span><strong>Time:</strong> Estimated 2-3 hours before discovery</span>
-                                                    </li>
-                                                    <li className="flex items-start gap-2">
-                                                        <span className="text-blue-400">•</span>
-                                                        <span><strong>Struggle:</strong> Evidence of violent confrontation</span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-gradient-to-r from-red-900 to-orange-900 p-6 rounded-lg mb-6 border-2 border-red-500">
-                                            <h3 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
-                                                <span>⚖️</span> Conclusion
-                                            </h3>
-                                            <p className="text-gray-200 text-lg leading-relaxed">
-                                                <strong>PREMEDITATED MURDER:</strong> Evidence indicates suspect knew victim (threatening letter).
-                                                Attack was planned (unlocked window entry). Suspect is male, size 11 shoe, wearing Nike Air Max.
-                                                Used both knife and firearm. Victim attempted to defend but was attacked from behind.
-                                                Suspect fled scene on foot, leaving blood trail. Case ready for prosecution.
-                                            </p>
-                                        </div>
-
-                                        <div className="text-center">
-                                            <button
-                                                onClick={() => setShowCaseSummary(false)}
-                                                className="px-12 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 mr-4"
-                                            >
-                                                ✕ Close Summary
-                                            </button>
-                                            <button
-                                                onClick={() => setShowEvidenceBoard(true)}
-                                                className="px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
-                                            >
-                                                📋 View Evidence Board
-                                            </button>
-                                        </div>
+                                                <div className="text-center">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowResult(false);
+                                                            setSelectedSuspect(null);
+                                                        }}
+                                                        className="px-12 py-4 bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 mr-4"
+                                                    >
+                                                        🔄 Try Again
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowCaseSummary(false);
+                                                            setShowResult(false);
+                                                            setSelectedSuspect(null);
+                                                        }}
+                                                        className="px-12 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
+                                                    >
+                                                        ✕ Close
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -2168,7 +2169,25 @@
         .whitespace-nowrap { white-space: nowrap; }
         .space-y-1 > * + * { margin-top: 0.25rem; }
         .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .leading-relaxed { line-height: 1.625; }
+        .text-8xl { font-size: 6rem; line-height: 1; }
+        .text-left { text-align: left; }
+        .bg-green-900 { background-color: #14532d; }
+        .border-green-500 { border-color: #22c55e; }
+        .text-green-400 { color: #4ade80; }
+        .max-w-6xl { max-width: 72rem; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-800 { color: #1f2937; }
+        .bg-gray-800 { background-color: #1f2937; }
+        .border-gray-600 { border-color: #4b5563; }
+        .hover\:bg-gray-700:hover { background-color: #374151; }
+        .hover\:border-yellow-500:hover { border-color: #eab308; }
+        .to-gray-800 { --tw-gradient-to: #1f2937; }
+        .border-yellow-500 { border-color: #eab308; }
+        .hover\:bg-yellow-700:hover { background-color: #a16207; }
+        .text-yellow-400 { color: #facc15; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
         .animate-ping {
             animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
