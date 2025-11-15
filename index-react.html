@@ -1332,8 +1332,9 @@
                     renderer.domElement.removeEventListener('click', onToolInteraction);
                     if (ringInterval) clearInterval(ringInterval);
                     if (audioContext) audioContext.close();
-                    backgroundAudio.pause();
-                    backgroundAudio.src = '';
+                    // Don't pause background music - let it continue playing across scene transitions
+                    // backgroundAudio.pause();
+                    // backgroundAudio.src = '';
                     if (voiceAudioRef.current) {
                         voiceAudioRef.current.pause();
                         voiceAudioRef.current.src = '';
