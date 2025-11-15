@@ -40,12 +40,12 @@
             const [collectedEvidence, setCollectedEvidence] = useState([]);
             const [zoomTarget, setZoomTarget] = useState(null);
             const [flashlightOn, setFlashlightOn] = useState(false);
-            const [showTutorial, setShowTutorial] = useState(true);
             const [discoveredClues, setDiscoveredClues] = useState([]);
             const [showCluePopup, setShowCluePopup] = useState(null);
             const [showCaseSummary, setShowCaseSummary] = useState(false);
             const [selectedSuspect, setSelectedSuspect] = useState(null);
             const [showResult, setShowResult] = useState(false);
+            const [showToolboxHint, setShowToolboxHint] = useState(true);
             const sceneRef = useRef(null);
             const audioRef = useRef(null);
             const voiceAudioRef = useRef(null);
@@ -1525,7 +1525,10 @@
 
                             {/* Toolbox Button */}
                             <button
-                                onClick={() => setShowToolbox(!showToolbox)}
+                                onClick={() => {
+                                    setShowToolbox(!showToolbox);
+                                    setShowToolboxHint(false);
+                                }}
                                 className="absolute bottom-6 right-6 w-16 h-16 bg-yellow-600 hover:bg-yellow-700 rounded-lg shadow-2xl flex items-center justify-center text-3xl transition-all duration-300 transform hover:scale-110"
                                 title="Detective Toolbox"
                             >
@@ -1543,6 +1546,9 @@
                                         >
                                             ✕
                                         </button>
+                                    </div>
+                                    <div className="mb-3 text-xs text-yellow-400 bg-yellow-900 bg-opacity-30 p-2 rounded">
+                                        💡 Select a tool, then click yellow circles on screen
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
                                         <button
@@ -1615,11 +1621,12 @@
                                         </button>
                                     </div>
                                     {selectedTool && (
-                                        <div className="mt-3 pt-3 border-t border-gray-600 text-sm text-yellow-400">
-                                            ✓ {selectedTool === 'magnifier' ? 'Magnifier' :
-                                               selectedTool === 'flashlight' ? 'Flashlight' :
-                                               selectedTool === 'camera' ? 'Camera' :
-                                               selectedTool === 'gloves' ? 'Gloves' : 'Test Tube'} selected. Click on scene to use.
+                                        <div className="mt-3 pt-3 border-t border-gray-600 text-xs text-white bg-blue-900 bg-opacity-40 p-2 rounded">
+                                            {selectedTool === 'magnifier' && '🔍 Examine blood, footprints, splatter'}
+                                            {selectedTool === 'flashlight' && '🔦 Illuminate windows, dark areas'}
+                                            {selectedTool === 'camera' && '📸 Photograph body, weapon, evidence'}
+                                            {selectedTool === 'gloves' && '🧤 Collect phone, papers, casing'}
+                                            {selectedTool === 'test-tube' && '🧪 Analyze samples'}
                                         </div>
                                     )}
                                 </div>
@@ -1751,73 +1758,10 @@
                                 </div>
                             )}
 
-                            {/* Tutorial Overlay */}
-                            {showTutorial && (
-                                <div className="absolute inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
-                                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 w-11/12 max-w-3xl rounded-lg shadow-2xl p-8 border-4 border-yellow-500">
-                                        <div className="text-center mb-6">
-                                            <div className="text-6xl mb-3">🕵️</div>
-                                            <h2 className="text-4xl font-bold text-yellow-400 mb-2">Detective Tools Tutorial</h2>
-                                            <p className="text-gray-300 text-lg">Learn how to investigate the crime scene</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4 mb-6">
-                                            <div className="bg-gray-700 p-4 rounded-lg">
-                                                <div className="text-3xl mb-2">🔍</div>
-                                                <div className="text-yellow-400 font-bold mb-1">Magnifying Glass</div>
-                                                <div className="text-gray-300 text-sm">
-                                                    Examine blood pools, footprints, and wall splatter. Look for yellow indicators!
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-gray-700 p-4 rounded-lg">
-                                                <div className="text-3xl mb-2">🔦</div>
-                                                <div className="text-yellow-400 font-bold mb-1">Flashlight</div>
-                                                <div className="text-gray-300 text-sm">
-                                                    Illuminate dark areas like the window and walls to reveal hidden evidence.
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-gray-700 p-4 rounded-lg">
-                                                <div className="text-3xl mb-2">📸</div>
-                                                <div className="text-yellow-400 font-bold mb-1">Camera</div>
-                                                <div className="text-gray-300 text-sm">
-                                                    Photograph the body outline, weapon, and important evidence for your records.
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-gray-700 p-4 rounded-lg">
-                                                <div className="text-3xl mb-2">🧤</div>
-                                                <div className="text-yellow-400 font-bold mb-1">Evidence Gloves</div>
-                                                <div className="text-gray-300 text-sm">
-                                                    Collect physical items: phone, documents, bullet casing, and other evidence.
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-yellow-900 bg-opacity-30 p-4 rounded-lg mb-6 border-2 border-yellow-600">
-                                            <div className="text-yellow-400 font-bold mb-2 flex items-center gap-2">
-                                                <span>💡</span>
-                                                <span>Pro Tips:</span>
-                                            </div>
-                                            <ul className="text-gray-300 text-sm space-y-1">
-                                                <li>✓ Click directly on yellow pulsing circles to discover clues!</li>
-                                                <li>✓ Circles show exactly where evidence is located</li>
-                                                <li>✓ Each clue can only be discovered once</li>
-                                                <li>✓ Check the Evidence Board (📋) to review collected items</li>
-                                                <li>✓ Try different tools to find all 10 clues!</li>
-                                            </ul>
-                                        </div>
-
-                                        <div className="text-center">
-                                            <button
-                                                onClick={() => setShowTutorial(false)}
-                                                className="px-12 py-4 bg-yellow-600 hover:bg-yellow-700 text-white text-xl font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
-                                            >
-                                                🧰 Start Investigation
-                                            </button>
-                                        </div>
-                                    </div>
+                            {/* Toolbox Hint - First time only */}
+                            {showToolboxHint && !showToolbox && (
+                                <div className="absolute bottom-24 right-6 bg-yellow-500 text-black px-4 py-3 rounded-lg shadow-2xl animate-pulse pointer-events-none">
+                                    <div className="font-bold text-sm">👉 Click toolbox to start!</div>
                                 </div>
                             )}
 
@@ -2169,7 +2113,11 @@
         .max-w-6xl { max-width: 72rem; }
         .text-gray-400 { color: #9ca3af; }
         .text-gray-800 { color: #1f2937; }
+        .text-black { color: #000; }
         .bg-gray-800 { background-color: #1f2937; }
+        .bg-yellow-500 { background-color: #eab308; }
+        .bg-blue-900 { background-color: #1e3a8a; }
+        .bg-opacity-40 { --tw-bg-opacity: 0.4; }
         .border-gray-600 { border-color: #4b5563; }
         .hover\:bg-gray-700:hover { background-color: #374151; }
         .hover\:border-yellow-500:hover { border-color: #eab308; }
