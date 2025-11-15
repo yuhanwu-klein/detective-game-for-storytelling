@@ -1412,6 +1412,35 @@
                 }
             };
 
+            const handleRestart = () => {
+                // Reset all game state but keep background music playing
+                setCurrentScene('office');
+                setShowNotebook(false);
+                setNoteText('location: outside the city\nevent: murder\n\n');
+                setIsRinging(false);
+                setSelectedTool(null);
+                setShowToolbox(false);
+                setShowEvidenceBoard(false);
+                setCollectedEvidence([]);
+                setZoomTarget(null);
+                setFlashlightOn(false);
+                setDiscoveredClues([]);
+                setShowCluePopup(null);
+                setShowCaseSummary(false);
+                setSelectedSuspect(null);
+                setShowResult(false);
+                setShowToolboxHint(true);
+
+                // Restart phone ringing after a short delay
+                setTimeout(() => {
+                    sceneRef.current?.startRinging();
+                    setIsRinging(true);
+                }, 2000);
+
+                // Background music continues playing (audioRef.current keeps playing)
+                console.log('Game restarted - background music continues');
+            };
+
             return (
                 <div className="relative w-full h-screen">
                     <div ref={mountRef} className="w-full h-full" />
@@ -1758,6 +1787,15 @@
                                 </div>
                             )}
 
+                            {/* Floating Restart Button - Always visible */}
+                            <button
+                                onClick={handleRestart}
+                                className="absolute top-6 right-6 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 z-30 font-bold"
+                                title="Restart Game"
+                            >
+                                🔄 Restart
+                            </button>
+
                             {/* Toolbox Hint - First time only */}
                             {showToolboxHint && !showToolbox && (
                                 <div className="absolute bottom-24 right-6 bg-yellow-500 text-black px-4 py-3 rounded-lg shadow-2xl animate-pulse pointer-events-none">
@@ -1892,9 +1930,15 @@
                                                             setShowResult(false);
                                                             setSelectedSuspect(null);
                                                         }}
-                                                        className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white text-lg font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
+                                                        className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white text-lg font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 mr-3"
                                                     >
                                                         ✕ Close
+                                                    </button>
+                                                    <button
+                                                        onClick={handleRestart}
+                                                        className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white text-lg font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105"
+                                                    >
+                                                        🔄 Restart Game
                                                     </button>
                                                 </div>
                                             </>
