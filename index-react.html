@@ -1345,16 +1345,6 @@
                 };
             }, [currentScene]);
 
-            const handleToggleRing = () => {
-                if (!isRinging) {
-                    sceneRef.current?.startRinging();
-                    setIsRinging(true);
-                } else {
-                    sceneRef.current?.stopRinging();
-                    setIsRinging(false);
-                }
-            };
-
             const handleCloseNotebook = () => {
                 setShowNotebook(false);
                 setIsRinging(false);
@@ -1400,12 +1390,25 @@
                     audioRef.current.play().then(() => {
                         console.log('Background music started');
                         setHasStarted(true);
+                        // Auto-start phone ringing after a short delay
+                        setTimeout(() => {
+                            sceneRef.current?.startRinging();
+                            setIsRinging(true);
+                        }, 2000); // 2 second delay before phone rings
                     }).catch(e => {
                         console.log('Audio play failed:', e);
                         setHasStarted(true); // Still start the game
+                        setTimeout(() => {
+                            sceneRef.current?.startRinging();
+                            setIsRinging(true);
+                        }, 2000);
                     });
                 } else {
                     setHasStarted(true);
+                    setTimeout(() => {
+                        sceneRef.current?.startRinging();
+                        setIsRinging(true);
+                    }, 2000);
                 }
             };
 
@@ -1498,28 +1501,15 @@
                         </div>
                     )}
 
-                    {currentScene === 'office' && (
-                        <>
-                            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
-                                <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                                    📱 Incoming Call
-                                </h1>
-                                <p className="text-white text-lg drop-shadow-md">
-                                    {isRinging ? "📲 Phone is ringing! Click the phone to answer..." : "Click to receive a call"}
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={handleToggleRing}
-                                className={`absolute bottom-12 left-1/2 transform -translate-x-1/2 px-8 py-4 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 ${
-                                    isRinging
-                                        ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                                        : 'bg-green-600 hover:bg-green-700 text-white'
-                                }`}
-                            >
-                                {isRinging ? '🔕 End Call' : '📲 Incoming Call'}
-                            </button>
-                        </>
+                    {currentScene === 'office' && isRinging && (
+                        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
+                            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg animate-pulse">
+                                📱 Incoming Call
+                            </h1>
+                            <p className="text-white text-lg drop-shadow-md">
+                                📲 Phone is ringing! Click the phone to answer...
+                            </p>
+                        </div>
                     )}
 
                     {currentScene === 'house' && (
